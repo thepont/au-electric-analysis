@@ -1,4 +1,4 @@
-import { Zap, Battery, Car, Flame, Waves } from 'lucide-react';
+import { Zap, Battery, Car, Flame, Waves, Clock } from 'lucide-react';
 
 interface InputSlidersProps {
   state: {
@@ -14,6 +14,9 @@ interface InputSlidersProps {
     gridExportLimit: number;
     serviceFuse: number;
     hasPool: boolean;
+    timerResistiveHW: boolean;
+    timerOldPool: boolean;
+    timerStorageHeater: boolean;
     strategies: {
       chargeEvInWindow: boolean;
       chargeBatInWindow: boolean;
@@ -423,6 +426,81 @@ export const InputSliders = ({ state, updateState }: InputSlidersProps) => {
                 </span>
               </div>
               <span className="text-xs text-gray-500">1.0 kW</span>
+            </div>
+          </button>
+        </div>
+      </div>
+
+      {/* Legacy Hacks Section */}
+      <div className="pt-4 border-t border-gray-200">
+        <h3 className="text-lg font-semibold text-slate-900 tracking-tighter mb-1">Legacy Hacks (No Upfront Cost)</h3>
+        <p className="text-sm text-slate-400 mb-3 uppercase tracking-widest">
+          Keep your old appliances, add smart timers for Free 3 window
+        </p>
+        <div className="grid md:grid-cols-3 gap-3">
+          {/* Timer: Resistive Hot Water */}
+          <button
+            onClick={() => updateState({ timerResistiveHW: !state.timerResistiveHW })}
+            disabled={state.isHeatPump}
+            className={`p-4 rounded-lg border-2 transition-all ${
+              state.timerResistiveHW
+                ? 'border-red-500 bg-red-50'
+                : state.isHeatPump
+                ? 'border-gray-200 bg-gray-100 cursor-not-allowed opacity-50'
+                : 'border-gray-300 bg-white hover:border-gray-400'
+            }`}
+          >
+            <div className="flex flex-col space-y-1">
+              <div className="flex items-center space-x-2">
+                <Clock className={`w-5 h-5 ${state.timerResistiveHW ? 'text-red-600' : 'text-gray-400'}`} />
+                <span className={`font-medium ${state.timerResistiveHW ? 'text-red-700' : 'text-gray-600'}`}>
+                  Timer: Resistive HW
+                </span>
+              </div>
+              <span className="text-xs text-gray-500">3.6 kW | $50 cost</span>
+            </div>
+          </button>
+
+          {/* Timer: Old Pool Pump */}
+          <button
+            onClick={() => updateState({ timerOldPool: !state.timerOldPool })}
+            disabled={state.hasPool && state.strategies.runPoolInWindow}
+            className={`p-4 rounded-lg border-2 transition-all ${
+              state.timerOldPool
+                ? 'border-cyan-500 bg-cyan-50'
+                : (state.hasPool && state.strategies.runPoolInWindow)
+                ? 'border-gray-200 bg-gray-100 cursor-not-allowed opacity-50'
+                : 'border-gray-300 bg-white hover:border-gray-400'
+            }`}
+          >
+            <div className="flex flex-col space-y-1">
+              <div className="flex items-center space-x-2">
+                <Waves className={`w-5 h-5 ${state.timerOldPool ? 'text-cyan-600' : 'text-gray-400'}`} />
+                <span className={`font-medium ${state.timerOldPool ? 'text-cyan-700' : 'text-gray-600'}`}>
+                  Timer: Old Pool Pump
+                </span>
+              </div>
+              <span className="text-xs text-gray-500">1.5 kW | $20 cost</span>
+            </div>
+          </button>
+
+          {/* Timer: Storage Heater */}
+          <button
+            onClick={() => updateState({ timerStorageHeater: !state.timerStorageHeater })}
+            className={`p-4 rounded-lg border-2 transition-all ${
+              state.timerStorageHeater
+                ? 'border-orange-500 bg-orange-50'
+                : 'border-gray-300 bg-white hover:border-gray-400'
+            }`}
+          >
+            <div className="flex flex-col space-y-1">
+              <div className="flex items-center space-x-2">
+                <Flame className={`w-5 h-5 ${state.timerStorageHeater ? 'text-orange-600' : 'text-gray-400'}`} />
+                <span className={`font-medium ${state.timerStorageHeater ? 'text-orange-700' : 'text-gray-600'}`}>
+                  Timer: Storage Heater
+                </span>
+              </div>
+              <span className="text-xs text-gray-500">2.0 kW | $0 cost</span>
             </div>
           </button>
         </div>

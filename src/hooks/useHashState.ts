@@ -13,6 +13,9 @@ interface EnergyState {
   gridExportLimit: number;
   serviceFuse: number;
   hasPool: boolean;
+  timerResistiveHW: boolean;
+  timerOldPool: boolean;
+  timerStorageHeater: boolean;
   strategies: {
     chargeEvInWindow: boolean;
     chargeBatInWindow: boolean;
@@ -34,6 +37,9 @@ const DEFAULT_STATE: EnergyState = {
   gridExportLimit: 5,
   serviceFuse: 63,
   hasPool: false,
+  timerResistiveHW: false,
+  timerOldPool: false,
+  timerStorageHeater: false,
   strategies: {
     chargeEvInWindow: false,
     chargeBatInWindow: false,
@@ -58,6 +64,9 @@ const parseHash = (hash: string): EnergyState => {
     gridExportLimit: parseFloat(params.get('exportLimit') || String(DEFAULT_STATE.gridExportLimit)),
     serviceFuse: parseFloat(params.get('fuse') || String(DEFAULT_STATE.serviceFuse)),
     hasPool: params.get('pool') === 'true',
+    timerResistiveHW: params.get('timerHW') === 'true',
+    timerOldPool: params.get('timerPool') === 'true',
+    timerStorageHeater: params.get('timerHeater') === 'true',
     strategies: {
       chargeEvInWindow: params.get('evWindow') === 'true',
       chargeBatInWindow: params.get('batWindow') === 'true',
@@ -82,6 +91,9 @@ const serializeHash = (state: EnergyState): string => {
   params.set('exportLimit', String(state.gridExportLimit));
   params.set('fuse', String(state.serviceFuse));
   params.set('pool', String(state.hasPool));
+  params.set('timerHW', String(state.timerResistiveHW));
+  params.set('timerPool', String(state.timerOldPool));
+  params.set('timerHeater', String(state.timerStorageHeater));
   params.set('evWindow', String(state.strategies.chargeEvInWindow));
   params.set('batWindow', String(state.strategies.chargeBatInWindow));
   params.set('poolWindow', String(state.strategies.runPoolInWindow));
@@ -122,6 +134,20 @@ export const useHashState = (): [EnergyState, (newState: Partial<EnergyState>) =
       // Disable V2H if EV is disabled
       if ('isEV' in newState && !newState.isEV) {
         updated.isV2H = false;
+      }
+      // Mutual exclusivity: Timer vs Upgrade for Hot Water
+      if ('timerResistiveHW' in newState && newState.timerResistiveHW) {
+        updated.isHeatPump = false;
+      }
+      if ('isHeatPump' in newState && newState.isHeatPump) {
+        updated.timerResistiveHW = false;
+      }
+      // Mutual exclusivity: Timer vs Upgrade for Pool
+      if ('timerOldPool' in newState && newState.timerOldPool) {
+        updated.strategies.runPoolInWindow = false;
+      }
+      if ('strategies' in newState && newState.strategies?.runPoolInWindow && prev.hasPool) {
+        updated.timerOldPool = false;
       }
       return updated;
     });

@@ -9,6 +9,7 @@ interface ROITableProps {
     solarSavings: number;
     transportSavings: number;
     gasSavings: number;
+    legacyTimerSavings: number;
     totalSavings: number;
     systemCost: number;
     roiYears: number;
@@ -27,6 +28,13 @@ export const ROITable = ({ results }: ROITableProps) => {
   };
 
   const strategies = [
+    {
+      name: 'Legacy Timer Hacks',
+      cost: 0, // Will be calculated based on enabled timers
+      saving: results.legacyTimerSavings,
+      link: null,
+      color: 'red',
+    },
     {
       name: 'OVO Free 3 Plan',
       cost: 0,
@@ -94,6 +102,7 @@ export const ROITable = ({ results }: ROITableProps) => {
           {strategies.map((strategy, idx) => {
             const payback = strategy.saving > 0 ? strategy.cost / strategy.saving : 999;
             const colorMap: Record<string, string> = {
+              red: 'text-red-600',
               emerald: 'text-emerald-600',
               yellow: 'text-yellow-600',
               blue: 'text-blue-600',

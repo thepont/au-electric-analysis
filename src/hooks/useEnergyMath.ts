@@ -24,6 +24,9 @@ interface EnergyInputs {
   gridExportLimit: number;
   serviceFuse: number;
   hasPool: boolean;
+  timerResistiveHW: boolean;
+  timerOldPool: boolean;
+  timerStorageHeater: boolean;
   strategies: {
     chargeEvInWindow: boolean;
     chargeBatInWindow: boolean;
@@ -37,6 +40,7 @@ interface EnergyResults {
   solarSavings: number;
   transportSavings: number;
   gasSavings: number;
+  legacyTimerSavings: number;
   totalSavings: number;
   legacyCosts: number[];
   hackedCosts: number[];
@@ -67,6 +71,9 @@ export const useEnergyMath = (inputs: EnergyInputs): EnergyResults => {
       gridExportLimit,
       serviceFuse,
       hasPool,
+      timerResistiveHW,
+      timerOldPool,
+      timerStorageHeater,
       strategies
     } = inputs;
     
@@ -115,6 +122,16 @@ export const useEnergyMath = (inputs: EnergyInputs): EnergyResults => {
     if (isHeatPump && strategies.runHotWaterInWindow) {
       peakLoad += 1.0; // Heat pump hot water load
     }
+    // Legacy timer loads
+    if (timerResistiveHW) {
+      peakLoad += 3.6; // Resistive hot water element
+    }
+    if (timerOldPool) {
+      peakLoad += 1.5; // Old pool pump
+    }
+    if (timerStorageHeater) {
+      peakLoad += 2.0; // Storage heater load
+    }
 
     // Determine Overload
     const isBreakerTripped = peakLoad > maxKw;
@@ -135,6 +152,16 @@ export const useEnergyMath = (inputs: EnergyInputs): EnergyResults => {
     }
     if (isHeatPump && strategies.runHotWaterInWindow) {
       requestedImportKwh += 3; // 1kW * 3h = 3 kWh
+    }
+    // Legacy timer loads
+    if (timerResistiveHW) {
+      requestedImportKwh += 10.8; // 3.6kW * 3h = 10.8 kWh
+    }
+    if (timerOldPool) {
+      requestedImportKwh += 4.5; // 1.5kW * 3h = 4.5 kWh
+    }
+    if (timerStorageHeater) {
+      requestedImportKwh += 6.0; // 2.0kW * 3h = 6.0 kWh
     }
 
     const actualImportKwh = Math.min(requestedImportKwh, maxPossibleImportKwh);
@@ -219,7 +246,26 @@ export const useEnergyMath = (inputs: EnergyInputs): EnergyResults => {
       }
     }
 
-    const totalSavings = batSavings + solarSavings + transportSavings + gasSavings;
+    // Legacy Timer Savings
+    // These move existing load from peak/off-peak rates to free window
+    let legacyTimerSavings = 0;
+    if (timerResistiveHW) {
+      // Resistive HW: 10.8 kWh/day moved from off-peak to free window
+      const annualKwh = 10.8 * 365;
+      legacyTimerSavings += annualKwh * (OFF_PEAK - FREE_WINDOW);
+    }
+    if (timerOldPool) {
+      // Old Pool Pump: 4.5 kWh/day moved from off-peak to free window
+      const annualKwh = 4.5 * 365;
+      legacyTimerSavings += annualKwh * (OFF_PEAK - FREE_WINDOW);
+    }
+    if (timerStorageHeater) {
+      // Storage Heater: 6.0 kWh/day moved from off-peak to free window
+      const annualKwh = 6.0 * 365;
+      legacyTimerSavings += annualKwh * (OFF_PEAK - FREE_WINDOW);
+    }
+
+    const totalSavings = batSavings + solarSavings + transportSavings + gasSavings + legacyTimerSavings;
 
     // Calculate system costs
     const solarCost = solarSize * 1000;
@@ -227,7 +273,11 @@ export const useEnergyMath = (inputs: EnergyInputs): EnergyResults => {
     const evCost = isEV ? 15000 : 0;
     const heatPumpCost = isHeatPump ? 3500 : 0;
     const inductionCost = isInduction ? 2000 : 0;
-    const systemCost = solarCost + batteryCost + evCost + heatPumpCost + inductionCost;
+    const timerResistiveHWCost = timerResistiveHW ? 50 : 0;
+    const timerOldPoolCost = timerOldPool ? 20 : 0;
+    const timerStorageHeaterCost = timerStorageHeater ? 0 : 0;
+    const systemCost = solarCost + batteryCost + evCost + heatPumpCost + inductionCost + 
+                       timerResistiveHWCost + timerOldPoolCost + timerStorageHeaterCost;
 
     // Calculate 15-year projections with 3% inflation
     const inflation = 1.03;
@@ -251,6 +301,7 @@ export const useEnergyMath = (inputs: EnergyInputs): EnergyResults => {
       solarSavings,
       transportSavings,
       gasSavings,
+      legacyTimerSavings,
       totalSavings,
       legacyCosts,
       hackedCosts,
@@ -278,6 +329,9 @@ export const useEnergyMath = (inputs: EnergyInputs): EnergyResults => {
     inputs.gridExportLimit,
     inputs.serviceFuse,
     inputs.hasPool,
+    inputs.timerResistiveHW,
+    inputs.timerOldPool,
+    inputs.timerStorageHeater,
     inputs.strategies.chargeEvInWindow,
     inputs.strategies.chargeBatInWindow,
     inputs.strategies.runPoolInWindow,
