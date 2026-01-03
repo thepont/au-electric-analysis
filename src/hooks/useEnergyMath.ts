@@ -89,8 +89,20 @@ export const useEnergyMath = (inputs: EnergyInputs): EnergyResults => {
     let gasSavings = 0;
     if (isHeatPump || isInduction) {
       // Savings from converting gas appliances
-      const heatPumpSavings = isHeatPump ? (gasBill * 0.35) - ((gasBill * 0.35) / 4.0 * OFF_PEAK * 365) / 365 : 0;
-      const inductionSavings = isInduction ? (gasBill * 0.15) - ((gasBill * 0.15) / 2.0 * OFF_PEAK * 365) / 365 : 0;
+      let heatPumpSavings = 0;
+      if (isHeatPump) {
+        const heatPumpGasUsage = gasBill * 0.35; // 35% of gas bill is hot water
+        const heatPumpElecCost = (heatPumpGasUsage / 4.0) * OFF_PEAK; // COP 4.0, charged at off-peak
+        heatPumpSavings = heatPumpGasUsage - heatPumpElecCost;
+      }
+      
+      let inductionSavings = 0;
+      if (isInduction) {
+        const inductionGasUsage = gasBill * 0.15; // 15% of gas bill is cooking
+        const inductionElecCost = (inductionGasUsage / 2.0) * OFF_PEAK; // 50% efficiency, charged at off-peak
+        inductionSavings = inductionGasUsage - inductionElecCost;
+      }
+      
       gasSavings = heatPumpSavings + inductionSavings;
       
       // If all gas appliances are gone, add supply charge savings

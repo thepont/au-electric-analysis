@@ -103,7 +103,7 @@ export const ROITable = ({ results }: ROITableProps) => {
                       href={strategy.link}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className={`inline-flex items-center px-3 py-1 rounded-md text-white font-medium bg-${strategy.color}-600 hover:bg-${strategy.color}-700 transition-colors`}
+                      className="inline-flex items-center px-3 py-1 rounded-md text-white font-medium transition-colors hover:opacity-90"
                       style={{
                         backgroundColor: strategy.color === 'emerald' ? '#059669' : 
                                        strategy.color === 'blue' ? '#2563eb' : '#6b7280'
