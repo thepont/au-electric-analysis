@@ -22,7 +22,7 @@ export const InputSliders = ({ state, updateState }: InputSlidersProps) => {
       <div className="grid md:grid-cols-3 gap-4">
         {/* Electricity Bill */}
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-2">
+          <label className="block text-sm font-medium text-slate-400 mb-2 uppercase tracking-widest">
             Annual Electricity Bill
           </label>
           <div className="flex items-center space-x-2">
@@ -50,7 +50,7 @@ export const InputSliders = ({ state, updateState }: InputSlidersProps) => {
 
         {/* Gas Bill */}
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-2">
+          <label className="block text-sm font-medium text-slate-400 mb-2 uppercase tracking-widest">
             Annual Gas Bill
           </label>
           <div className="flex items-center space-x-2">
@@ -78,7 +78,7 @@ export const InputSliders = ({ state, updateState }: InputSlidersProps) => {
 
         {/* Petrol Bill */}
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-2">
+          <label className="block text-sm font-medium text-slate-400 mb-2 uppercase tracking-widest">
             Annual Petrol Bill
           </label>
           <div className="flex items-center space-x-2">
@@ -109,7 +109,7 @@ export const InputSliders = ({ state, updateState }: InputSlidersProps) => {
       <div className="grid md:grid-cols-2 gap-4 pt-4 border-t border-gray-200">
         {/* Solar Size */}
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-2">
+          <label className="block text-sm font-medium text-slate-400 mb-2 uppercase tracking-widest">
             Solar System Size
           </label>
           <div className="flex items-center space-x-2">
@@ -137,9 +137,9 @@ export const InputSliders = ({ state, updateState }: InputSlidersProps) => {
 
         {/* Battery Size */}
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-2">
+          <label className="block text-sm font-medium text-slate-400 mb-2 uppercase tracking-widest">
             Battery Capacity
-            {state.isV2H && <span className="ml-2 text-xs text-blue-600">(V2H: 60 kWh)</span>}
+            {state.isV2H && <span className="ml-2 text-xs text-amber-500">(V2H: 60 kWh)</span>}
           </label>
           <div className="flex items-center space-x-2">
             <input
@@ -169,7 +169,7 @@ export const InputSliders = ({ state, updateState }: InputSlidersProps) => {
 
       {/* Strategy Toggles */}
       <div className="pt-4 border-t border-gray-200">
-        <h3 className="text-lg font-semibold text-gray-800 mb-3">Energy Strategy</h3>
+        <h3 className="text-lg font-semibold text-slate-900 tracking-tighter mb-3">Energy Strategy</h3>
         <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-3">
           {/* EV Toggle */}
           <button

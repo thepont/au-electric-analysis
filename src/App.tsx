@@ -14,30 +14,32 @@ function App() {
   const [hasAcceptedDisclaimer, setHasAcceptedDisclaimer] = useState(false);
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-emerald-900">
+    <div className="min-h-screen bg-slate-50">
       <DisclaimerModal onAccept={() => setHasAcceptedDisclaimer(true)} />
       <div className="max-w-7xl mx-auto px-4 py-8">
         {/* Header */}
-        <header className="text-center mb-10">
-          <div className="flex items-center justify-center space-x-3 mb-3">
-            <Zap className="w-10 h-10 text-emerald-400" />
-            <h1 className="text-5xl font-bold text-white">
-              EnergyHome<span className="text-emerald-400">.OS</span>
-            </h1>
+        <header className="backdrop-blur-xl bg-white/80 sticky top-0 z-10 -mx-4 px-4 py-6 mb-10 border-b border-slate-200">
+          <div className="max-w-7xl mx-auto text-center">
+            <div className="flex items-center justify-center space-x-3 mb-3">
+              <Zap className="w-10 h-10 text-amber-500" />
+              <h1 className="text-5xl font-bold text-slate-900 tracking-tighter">
+                EnergyHome<span className="text-emerald-600">.OS</span>
+              </h1>
+            </div>
+            <p className="text-xl text-slate-900">
+              Australian Solar/Battery/EV Arbitrage ROI Dashboard
+            </p>
+            <p className="text-sm text-slate-400 mt-2 uppercase tracking-widest">
+              Hacker's Guide to Energy Independence
+            </p>
           </div>
-          <p className="text-xl text-slate-300">
-            Australian Solar/Battery/EV Arbitrage ROI Dashboard
-          </p>
-          <p className="text-sm text-slate-400 mt-2">
-            Hacker's Guide to Energy Independence
-          </p>
         </header>
 
         <div className="space-y-6">
           {/* Input Controls */}
-          <div className="bg-white rounded-xl shadow-2xl p-6">
-            <h2 className="text-2xl font-semibold text-slate-800 mb-4 flex items-center">
-              <span className="w-2 h-8 bg-emerald-500 rounded mr-3"></span>
+          <div className="bg-white rounded-[2.5rem] shadow-sm border border-slate-200 p-8">
+            <h2 className="text-2xl font-semibold text-slate-900 tracking-tighter mb-4 flex items-center">
+              <span className="w-2 h-8 bg-emerald-600 rounded mr-3"></span>
               Your Energy Setup
             </h2>
             <InputSliders state={state} updateState={updateState} />
@@ -45,8 +47,8 @@ function App() {
 
           {/* ROI Leaderboard */}
           {hasAcceptedDisclaimer && (
-            <div className="bg-white rounded-xl shadow-2xl p-6">
-              <h2 className="text-2xl font-semibold text-slate-800 mb-4 flex items-center">
+            <div className="bg-white rounded-[2.5rem] shadow-sm border border-slate-200 p-8">
+              <h2 className="text-2xl font-semibold text-slate-900 tracking-tighter mb-4 flex items-center">
                 <span className="w-2 h-8 bg-amber-500 rounded mr-3"></span>
                 ROI Leaderboard
               </h2>
@@ -56,12 +58,12 @@ function App() {
 
           {/* Cost Graph - The Race */}
           {hasAcceptedDisclaimer && (
-            <div className="bg-white rounded-xl shadow-2xl p-6">
-              <h2 className="text-2xl font-semibold text-slate-800 mb-2 flex items-center">
-                <span className="w-2 h-8 bg-blue-500 rounded mr-3"></span>
+            <div className="bg-white rounded-[2.5rem] shadow-sm border border-slate-200 p-8">
+              <h2 className="text-2xl font-semibold text-slate-900 tracking-tighter mb-2 flex items-center">
+                <span className="w-2 h-8 bg-slate-900 rounded mr-3"></span>
                 15-Year Cost Race
               </h2>
-              <p className="text-sm text-slate-600 mb-4">
+              <p className="text-sm text-slate-400 mb-4 uppercase tracking-widest">
                 Watch the crossover point where your investment pays off
               </p>
               <CostGraph results={results} />
@@ -73,10 +75,10 @@ function App() {
         </div>
 
         {/* Footer */}
-        <footer className="mt-10 text-slate-300">
+        <footer className="mt-10 text-slate-400">
           {/* Mandatory Disclaimer */}
-          <div className="bg-slate-800 rounded-lg p-4 mb-4 border border-slate-700">
-            <p className="text-sm text-center">
+          <div className="bg-white rounded-[2.5rem] shadow-sm border border-slate-200 p-6 mb-4">
+            <p className="text-sm text-center text-slate-900">
               <strong>⚖️ Legal Disclaimer:</strong> Calculations based on AEMO 2024 ISP 'Step Change' scenario 
               and CSIRO GenCost 2024-25. Actual savings will vary based on weather, usage patterns, and tariff changes. 
               All figures are estimates and should not be considered financial advice.
@@ -87,7 +89,7 @@ function App() {
             <p className="mb-2">
               Built with Vite + React + Tailwind + Recharts
             </p>
-            <p className="text-xs text-slate-500">
+            <p className="text-xs text-slate-400 uppercase tracking-widest">
               Share your scenario via URL • All calculations run locally in browser
             </p>
           </div>
