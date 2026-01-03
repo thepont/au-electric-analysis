@@ -1,3 +1,5 @@
+import { Tooltip } from './Tooltip';
+
 interface ROITableProps {
   results: {
     batSavings: number;
@@ -7,17 +9,18 @@ interface ROITableProps {
     totalSavings: number;
     systemCost: number;
     roiYears: number;
+    gridPriceWarning?: string;
   };
 }
 
 export const ROITable = ({ results }: ROITableProps) => {
   const formatCurrency = (amount: number) => {
-    return `$${amount.toLocaleString('en-US', { minimumFractionDigits: 0, maximumFractionDigits: 0 })}`;
+    return `~$${amount.toLocaleString('en-US', { minimumFractionDigits: 0, maximumFractionDigits: 0 })}`;
   };
 
   const formatYears = (years: number) => {
     if (years > 100) return 'N/A';
-    return `${years.toFixed(1)} years`;
+    return `~${years.toFixed(1)} years`;
   };
 
   const strategies = [
@@ -53,6 +56,13 @@ export const ROITable = ({ results }: ROITableProps) => {
 
   return (
     <div className="overflow-x-auto">
+      {results.gridPriceWarning && (
+        <div className="mb-4 bg-amber-50 border-l-4 border-amber-500 p-3 rounded">
+          <p className="text-sm text-amber-800">
+            ⚠️ <strong>Warning:</strong> {results.gridPriceWarning}
+          </p>
+        </div>
+      )}
       <table className="min-w-full divide-y divide-gray-200">
         <thead className="bg-slate-100">
           <tr>
@@ -63,10 +73,14 @@ export const ROITable = ({ results }: ROITableProps) => {
               Upfront Cost
             </th>
             <th className="px-6 py-3 text-right text-xs font-medium text-slate-700 uppercase tracking-wider">
-              Annual Saving
+              <Tooltip content="Estimated based on current energy rates. Subject to change by retailers.">
+                <span>Annual Saving (Est.)</span>
+              </Tooltip>
             </th>
             <th className="px-6 py-3 text-right text-xs font-medium text-slate-700 uppercase tracking-wider">
-              Payback
+              <Tooltip content="Approximate time to recover initial investment. Assumes 4% energy inflation per AEMO ISP 2024.">
+                <span>Payback (Est.)</span>
+              </Tooltip>
             </th>
             <th className="px-6 py-3 text-center text-xs font-medium text-slate-700 uppercase tracking-wider">
               Action
