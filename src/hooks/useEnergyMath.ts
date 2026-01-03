@@ -238,6 +238,7 @@ export const useEnergyMath = (inputs: EnergyInputs): EnergyResults => {
       gridPriceWarning,
       assumptions,
     };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [
     inputs.bill,
     inputs.gasBill,
