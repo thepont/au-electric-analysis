@@ -13,7 +13,7 @@ interface LoadGaugeProps {
 }
 
 export const LoadGauge = ({ peakLoad, maxKw, isBreakerTripped, wastedKwh, serviceFuse }: LoadGaugeProps) => {
-  const loadPercentage = Math.min((peakLoad / maxKw) * 100, 100);
+  const loadPercentage = maxKw > 0 ? Math.min((peakLoad / maxKw) * 100, 100) : 0;
   const isWarning = loadPercentage > 80 && !isBreakerTripped;
   const isDanger = isBreakerTripped;
 
