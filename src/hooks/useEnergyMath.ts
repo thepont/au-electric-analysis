@@ -164,7 +164,9 @@ export const useEnergyMath = (inputs: EnergyInputs): EnergyResults => {
       : (serviceFuse * 230) / 1000;
 
     // Calculate Peak Instantaneous Load (kW) during 11am-2pm window
-    const baseLoad = 0.5; // kW
+    // Base load varies by household; estimate from daily usage pattern
+    // Typical range: 0.2kW (very efficient) to 1.0kW (larger home with always-on devices)
+    const baseLoad = Math.min(0.8, adjustedDailyKwh / 24); // Estimate base load from daily average, capped at 0.8kW
     let peakLoad = baseLoad;
     
     if (isEV && strategies.chargeEvInWindow) {
@@ -187,7 +189,8 @@ export const useEnergyMath = (inputs: EnergyInputs): EnergyResults => {
     const maxPossibleImportKwh = maxKw * 3; // 3-hour physical limit
     
     // Calculate requested import during free window
-    let requestedImportKwh = 0;
+    // Include base load that runs during the 3-hour window
+    let requestedImportKwh = baseLoad * 3; // Base load always runs
     if (isEV && strategies.chargeEvInWindow) {
       requestedImportKwh += 21; // 7kW * 3h = 21 kWh
     }
@@ -209,7 +212,10 @@ export const useEnergyMath = (inputs: EnergyInputs): EnergyResults => {
     const dailyShift = Math.min(usableCapacity, dailyPeakNeed);
     
     // Adjust battery savings for wasted kWh due to fuse constraint
-    // The wastedValue represents the annual cost of energy we can't import due to fuse limits
+    // The logic: We want to shift energy usage to the free window (11am-2pm)
+    // If we can't import all the energy we need due to fuse limits, we lose that saving opportunity
+    // wastedKwh represents the daily kWh we wanted to import but couldn't
+    // Each wasted kWh means we have to buy it at peak rate instead of getting it free
     const wastedValue = wastedKwh * (PEAK_RATE - FREE_WINDOW) * 365;
     const batSavings = Math.max(0, dailyShift * (PEAK_RATE - FREE_WINDOW) * 365 - wastedValue);
 

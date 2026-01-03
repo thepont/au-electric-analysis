@@ -244,7 +244,9 @@ describe('useEnergyMath', () => {
 
       // 63A * 230V / 1000 = 14.49 kW
       expect(result.current.maxKw).toBeCloseTo(14.49, 2);
-      expect(result.current.peakLoad).toBe(0.5); // Base load only
+      // Base load is now calculated dynamically: min(0.8, dailyKwh/24)
+      // With bill=$3000, average rate ~$0.41/kWh: dailyKwh ≈ 20kWh, base ≈ 0.8kW
+      expect(result.current.peakLoad).toBeCloseTo(0.8, 1); // Dynamic base load
       expect(result.current.isBreakerTripped).toBe(false);
     });
 
@@ -308,8 +310,8 @@ describe('useEnergyMath', () => {
 
       const { result } = renderHook(() => useEnergyMath(inputs));
 
-      // Peak load = 0.5 + 7.0 + 5.0 + 1.5 + 1.0 = 15.0 kW
-      expect(result.current.peakLoad).toBe(15.0);
+      // Peak load = base(~0.8) + 7.0 + 5.0 + 1.5 + 1.0 ≈ 15.3 kW
+      expect(result.current.peakLoad).toBeCloseTo(15.3, 1);
       
       // Max for 63A = 14.49 kW, so should trip
       expect(result.current.isBreakerTripped).toBe(true);
@@ -343,8 +345,8 @@ describe('useEnergyMath', () => {
 
       const { result } = renderHook(() => useEnergyMath(inputs));
 
-      // Peak load = 0.5 + 7.0 + 5.0 = 12.5 kW
-      expect(result.current.peakLoad).toBe(12.5);
+      // Peak load = base(~0.8) + 7.0 + 5.0 = 12.8 kW
+      expect(result.current.peakLoad).toBeCloseTo(12.8, 1);
       
       // Max for 80A = 18.4 kW, so should not trip
       expect(result.current.isBreakerTripped).toBe(false);
@@ -378,14 +380,14 @@ describe('useEnergyMath', () => {
 
       const { result } = renderHook(() => useEnergyMath(inputs));
 
-      // Requested = 21 + 13.5 + 4.5 + 3 = 42 kWh
-      expect(result.current.requestedImportKwh).toBe(42);
+      // Requested = base(~0.8*3=2.4) + 21 + 13.5 + 4.5 + 3 ≈ 44.4 kWh
+      expect(result.current.requestedImportKwh).toBeCloseTo(44.4, 1);
       
       // Max possible = 14.49 kW * 3h = 43.47 kWh
-      expect(result.current.actualImportKwh).toBeCloseTo(42, 1);
+      expect(result.current.actualImportKwh).toBeCloseTo(43.47, 1);
       
-      // No waste in this case as requested < max
-      expect(result.current.wastedKwh).toBeCloseTo(0, 1);
+      // Waste ≈ 44.4 - 43.47 ≈ 0.9 kWh
+      expect(result.current.wastedKwh).toBeCloseTo(0.9, 1);
     });
 
     it('should reduce savings when there is wasted capacity', () => {
@@ -416,14 +418,14 @@ describe('useEnergyMath', () => {
 
       const { result } = renderHook(() => useEnergyMath(inputs));
 
-      // Requested = 21 + 15 + 4.5 + 3 = 43.5 kWh
-      expect(result.current.requestedImportKwh).toBe(43.5);
+      // Requested = base(~0.8*3=2.4) + 21 + 15 + 4.5 + 3 ≈ 45.9 kWh
+      expect(result.current.requestedImportKwh).toBeCloseTo(45.9, 1);
       
       // Max possible = ~43.47 kWh
       expect(result.current.actualImportKwh).toBeCloseTo(43.47, 1);
       
-      // Wasted = ~0.03 kWh (minimal)
-      expect(result.current.wastedKwh).toBeGreaterThanOrEqual(0);
+      // Wasted ≈ 45.9 - 43.47 ≈ 2.4 kWh
+      expect(result.current.wastedKwh).toBeCloseTo(2.4, 1);
     });
   });
 });
