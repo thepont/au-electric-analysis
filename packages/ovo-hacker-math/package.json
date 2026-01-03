@@ -4,6 +4,9 @@
   "description": "Core arbitrage logic for the OVO Energy 'Free 3' Battery Strategy.",
   "main": "src/index.js",
   "type": "module",
+  "exports": {
+    ".": "./src/index.js"
+  },
   "license": "MIT",
   "keywords": [
     "ovo-energy",
