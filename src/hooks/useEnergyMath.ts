@@ -146,12 +146,11 @@ export const useEnergyMath = (inputs: EnergyInputs): EnergyResults => {
     
     // Adjust battery savings for wasted kWh due to fuse constraint
     // The wastedValue represents the annual cost of energy we can't import due to fuse limits
-    // We scale it proportionally to the battery savings calculation
-    const wastedValue = requestedImportKwh > 0 
-      ? (wastedKwh * (PEAK_RATE - FREE_WINDOW) * 365 / requestedImportKwh)
-      : 0;
+    const wastedValue = wastedKwh * (PEAK_RATE - FREE_WINDOW) * 365;
     const batSavings = Math.max(0, dailyShift * (PEAK_RATE - FREE_WINDOW) * 365 - wastedValue);
 
+    
+    
     // Solar Formula with Export Clipping
     const solarGen = solarSize * 3.8 * 365;
     const selfUse = Math.min(adjustedDailyKwh * 365 - dailyShift * 365, solarGen * 0.3);
