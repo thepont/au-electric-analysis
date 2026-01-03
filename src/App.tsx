@@ -6,6 +6,7 @@ import { ROITable } from './components/ROITable';
 import { CostGraph } from './components/CostGraph';
 import { ReferralLinks } from './components/ReferralLinks';
 import { DisclaimerModal } from './components/DisclaimerModal';
+import { LoadGauge } from './components/LoadGauge';
 import { Zap } from 'lucide-react';
 import { useState } from 'react';
 
@@ -45,6 +46,17 @@ function App() {
             </h2>
             <InputSliders state={state} updateState={updateState} />
           </div>
+
+          {/* Load Gauge */}
+          {hasAcceptedDisclaimer && (
+            <LoadGauge
+              peakLoad={results.peakLoad}
+              maxKw={results.maxKw}
+              isBreakerTripped={results.isBreakerTripped}
+              wastedKwh={results.wastedKwh}
+              serviceFuse={state.serviceFuse}
+            />
+          )}
 
           {/* Assumptions Panel */}
           {hasAcceptedDisclaimer && (

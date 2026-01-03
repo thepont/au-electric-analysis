@@ -16,6 +16,13 @@ interface EnergyState {
   hasPool: boolean;
   hasOldDryer: boolean;
   gridExportLimit: number;
+  serviceFuse: number;
+  strategies: {
+    chargeEvInWindow: boolean;
+    chargeBatInWindow: boolean;
+    runPoolInWindow: boolean;
+    runHotWaterInWindow: boolean;
+  };
 }
 
 const DEFAULT_STATE: EnergyState = {
@@ -34,6 +41,13 @@ const DEFAULT_STATE: EnergyState = {
   hasPool: false,
   hasOldDryer: true,
   gridExportLimit: 5,
+  serviceFuse: 63,
+  strategies: {
+    chargeEvInWindow: false,
+    chargeBatInWindow: false,
+    runPoolInWindow: false,
+    runHotWaterInWindow: false,
+  },
 };
 
 // Parse hash string to state object
@@ -55,6 +69,13 @@ const parseHash = (hash: string): EnergyState => {
     hasPool: params.get('pool') === 'true',
     hasOldDryer: params.get('olddryer') !== 'false',
     gridExportLimit: parseFloat(params.get('exportLimit') || String(DEFAULT_STATE.gridExportLimit)),
+    serviceFuse: parseFloat(params.get('fuse') || String(DEFAULT_STATE.serviceFuse)),
+    strategies: {
+      chargeEvInWindow: params.get('evWindow') === 'true',
+      chargeBatInWindow: params.get('batWindow') === 'true',
+      runPoolInWindow: params.get('poolWindow') === 'true',
+      runHotWaterInWindow: params.get('hwWindow') === 'true',
+    },
   };
 };
 
@@ -76,6 +97,11 @@ const serializeHash = (state: EnergyState): string => {
   params.set('pool', String(state.hasPool));
   params.set('olddryer', String(state.hasOldDryer));
   params.set('exportLimit', String(state.gridExportLimit));
+  params.set('fuse', String(state.serviceFuse));
+  params.set('evWindow', String(state.strategies.chargeEvInWindow));
+  params.set('batWindow', String(state.strategies.chargeBatInWindow));
+  params.set('poolWindow', String(state.strategies.runPoolInWindow));
+  params.set('hwWindow', String(state.strategies.runHotWaterInWindow));
   return `#${params.toString()}`;
 };
 

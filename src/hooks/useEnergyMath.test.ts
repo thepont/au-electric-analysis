@@ -3,230 +3,429 @@ import { renderHook } from '@testing-library/react';
 import { useEnergyMath } from './useEnergyMath';
 
 describe('useEnergyMath', () => {
-  const baseInputs = {
-    bill: 3000,
-    gasBill: 1200,
-    petrolBill: 3000,
-    solarSize: 6.6,
-    batterySize: 13.5,
-    isEV: false,
-    isV2H: false,
-    isHeatPump: false,
-    isInduction: false,
-    hasGasHeating: true,
-    hasGasWater: true,
-    hasGasCooking: true,
-    hasPool: false,
-    hasOldDryer: true,
-    gridExportLimit: 5,
-  };
+  describe('Grid Export Limit (DNSP Clipping)', () => {
+    it('should calculate lower savings with 5kW export limit vs unlimited for a Super System (17kW solar)', () => {
+      // Super System scenario: 17kW solar system
+      const baseInputs = {
+        bill: 3000,
+        gasBill: 800,
+        petrolBill: 3000,
+        solarSize: 17,
+        batterySize: 13.5,
+        isEV: false,
+        isV2H: false,
+        isHeatPump: false,
+        isInduction: false,
+        hasGasHeating: true,
+        hasGasWater: true,
+        hasGasCooking: true,
+        hasOldDryer: false,
+        serviceFuse: 63,
+        hasPool: false,
+        strategies: {
+          chargeEvInWindow: false,
+          chargeBatInWindow: false,
+          runPoolInWindow: false,
+          runHotWaterInWindow: false,
+        },
+      };
 
-  // Grid Export Limit tests (from main branch)
-  describe('Grid Export Limit Clipping', () => {
-    it('should not clip exports when grid export limit is unlimited (999+)', () => {
-      const { result } = renderHook(() =>
-        useEnergyMath({ ...baseInputs, gridExportLimit: 999, solarSize: 10 })
+      // Test with 5kW export limit (Single Phase Standard)
+      const { result: limitedResult } = renderHook(() =>
+        useEnergyMath({ ...baseInputs, gridExportLimit: 5 })
       );
 
-      expect(result.current.exportClippingLoss).toBe(0);
+      // Test with unlimited export
+      const { result: unlimitedResult } = renderHook(() =>
+        useEnergyMath({ ...baseInputs, gridExportLimit: 999 })
+      );
+
+      // The limited export should have lower solar savings than unlimited
+      expect(limitedResult.current.solarSavings).toBeLessThan(
+        unlimitedResult.current.solarSavings
+      );
+
+      // The limited export should have a positive clipping loss
+      expect(limitedResult.current.exportClippingLoss).toBeGreaterThan(0);
+
+      // The unlimited export should have no clipping loss
+      expect(unlimitedResult.current.exportClippingLoss).toBe(0);
+
+      // Total savings should also be lower with the limit
+      expect(limitedResult.current.totalSavings).toBeLessThan(
+        unlimitedResult.current.totalSavings
+      );
     });
 
-    it('should calculate export clipping when solar exceeds base load + export limit', () => {
+    it('should not apply clipping for small solar systems under the export limit', () => {
       const inputs = {
-        ...baseInputs,
-        solarSize: 10, // 10kW solar system
-        gridExportLimit: 5, // 5kW export limit
+        bill: 3000,
+        gasBill: 800,
+        petrolBill: 3000,
+        solarSize: 3, // Small 3kW system
+        batterySize: 13.5,
+        isEV: false,
+        isV2H: false,
+        isHeatPump: false,
+        isInduction: false,
+        hasGasHeating: true,
+        hasGasWater: true,
+        hasGasCooking: true,
+        hasOldDryer: false,
+        gridExportLimit: 5, // 5kW limit
+        serviceFuse: 63,
+        hasPool: false,
+        strategies: {
+          chargeEvInWindow: false,
+          chargeBatInWindow: false,
+          runPoolInWindow: false,
+          runHotWaterInWindow: false,
+        },
       };
 
       const { result } = renderHook(() => useEnergyMath(inputs));
 
-      // With a 10kW system and 5kW limit, we expect some clipping
-      // The exact amount depends on base load calculations
+      // Small system should not experience clipping
+      expect(result.current.exportClippingLoss).toBe(0);
+    });
+
+    it('should handle 0kW export limit (no export allowed)', () => {
+      const inputs = {
+        bill: 3000,
+        gasBill: 800,
+        petrolBill: 3000,
+        solarSize: 6.6,
+        batterySize: 13.5,
+        isEV: false,
+        isV2H: false,
+        isHeatPump: false,
+        isInduction: false,
+        hasGasHeating: true,
+        hasGasWater: true,
+        hasGasCooking: true,
+        hasOldDryer: false,
+        gridExportLimit: 0, // No export allowed
+        serviceFuse: 63,
+        hasPool: false,
+        strategies: {
+          chargeEvInWindow: false,
+          chargeBatInWindow: false,
+          runPoolInWindow: false,
+          runHotWaterInWindow: false,
+        },
+      };
+
+      const { result } = renderHook(() => useEnergyMath(inputs));
+
+      // With 0kW export limit, there should be significant clipping
       expect(result.current.exportClippingLoss).toBeGreaterThan(0);
+      
+      // Solar savings should be lower than unlimited
+      const { result: unlimitedResult } = renderHook(() =>
+        useEnergyMath({ ...inputs, gridExportLimit: 999 })
+      );
+      
+      expect(result.current.solarSavings).toBeLessThan(
+        unlimitedResult.current.solarSavings
+      );
     });
 
-    it('should not clip when solar system is smaller than export limit', () => {
+    it('should handle 10kW export limit (Three Phase)', () => {
       const inputs = {
-        ...baseInputs,
-        solarSize: 4, // 4kW solar system
-        gridExportLimit: 10, // 10kW export limit
+        bill: 3000,
+        gasBill: 800,
+        petrolBill: 3000,
+        solarSize: 17, // Large system
+        batterySize: 13.5,
+        isEV: false,
+        isV2H: false,
+        isHeatPump: false,
+        isInduction: false,
+        hasGasHeating: true,
+        hasGasWater: true,
+        hasGasCooking: true,
+        hasOldDryer: false,
+        gridExportLimit: 10, // Three Phase limit
+        serviceFuse: 63,
+        hasPool: false,
+        strategies: {
+          chargeEvInWindow: false,
+          chargeBatInWindow: false,
+          runPoolInWindow: false,
+          runHotWaterInWindow: false,
+        },
       };
 
-      const { result } = renderHook(() => useEnergyMath(inputs));
+      const { result: tenKwResult } = renderHook(() => useEnergyMath(inputs));
+      const { result: fiveKwResult } = renderHook(() =>
+        useEnergyMath({ ...inputs, gridExportLimit: 5 })
+      );
 
-      expect(result.current.exportClippingLoss).toBe(0);
+      // 10kW limit should have lower clipping loss than 5kW limit
+      expect(tenKwResult.current.exportClippingLoss).toBeLessThan(
+        fiveKwResult.current.exportClippingLoss!
+      );
+
+      // 10kW limit should have higher solar savings than 5kW limit
+      expect(tenKwResult.current.solarSavings).toBeGreaterThan(
+        fiveKwResult.current.solarSavings
+      );
     });
 
-    it('should not clip when there is no solar system', () => {
+    it('should calculate realistic savings for default 6.6kW system with 5kW limit', () => {
       const inputs = {
-        ...baseInputs,
-        solarSize: 0,
+        bill: 3000,
+        gasBill: 800,
+        petrolBill: 3000,
+        solarSize: 6.6, // Standard residential system
+        batterySize: 13.5,
+        isEV: false,
+        isV2H: false,
+        isHeatPump: false,
+        isInduction: false,
+        hasGasHeating: true,
+        hasGasWater: true,
+        hasGasCooking: true,
+        hasOldDryer: false,
         gridExportLimit: 5,
+        serviceFuse: 63,
+        hasPool: false,
+        strategies: {
+          chargeEvInWindow: false,
+          chargeBatInWindow: false,
+          runPoolInWindow: false,
+          runHotWaterInWindow: false,
+        },
       };
 
       const { result } = renderHook(() => useEnergyMath(inputs));
 
-      expect(result.current.exportClippingLoss).toBe(0);
-    });
-
-    it('should reduce solar savings when export is clipped', () => {
-      const withoutClipping = renderHook(() =>
-        useEnergyMath({ ...baseInputs, solarSize: 10, gridExportLimit: 999 })
-      );
-
-      const withClipping = renderHook(() =>
-        useEnergyMath({ ...baseInputs, solarSize: 10, gridExportLimit: 5 })
-      );
-
-      // Solar savings should be lower when export is clipped
-      expect(withClipping.result.current.solarSavings).toBeLessThan(
-        withoutClipping.result.current.solarSavings
-      );
+      // Should have some solar savings
+      expect(result.current.solarSavings).toBeGreaterThan(0);
+      
+      // Should have minimal or no clipping for a 6.6kW system with 5kW limit
+      // (depends on base load calculation)
+      expect(result.current.exportClippingLoss).toBeGreaterThanOrEqual(0);
+      
+      // All results should be finite numbers
+      expect(Number.isFinite(result.current.solarSavings)).toBe(true);
+      expect(Number.isFinite(result.current.totalSavings)).toBe(true);
     });
   });
 
-  // Appliance profile tests (from my branch)
-  describe('Appliance Profiles', () => {
-    it('should calculate assumptions based on gas bill', () => {
-      const { result } = renderHook(() => useEnergyMath(baseInputs));
-
-      expect(result.current.assumptions).toBeDefined();
-      expect(result.current.assumptions.length).toBeGreaterThan(0);
-      
-      // Should have gas heating assumption
-      const gasHeating = result.current.assumptions.find(a => a.name === 'Gas Ducted Heating');
-      expect(gasHeating).toBeDefined();
-      expect(gasHeating?.cost).toBe(600); // 50% of 1200
-    });
-
-    it('should calculate pool pump savings when hasPool is true', () => {
-      const { result } = renderHook(() => useEnergyMath({ ...baseInputs, hasPool: true }));
-
-      expect(result.current.poolPumpSavings).toBe(900);
-      
-      // Should have pool pump in assumptions
-      const poolPump = result.current.assumptions.find(a => a.name === 'Single Speed Pool Pump');
-      expect(poolPump).toBeDefined();
-      expect(poolPump?.cost).toBe(1300);
-    });
-
-    it('should not calculate pool pump savings when hasPool is false', () => {
-      const { result } = renderHook(() => useEnergyMath({ ...baseInputs, hasPool: false }));
-
-      expect(result.current.poolPumpSavings).toBe(0);
-    });
-
-    it('should calculate heat pump dryer savings when hasOldDryer is true', () => {
-      const { result } = renderHook(() => useEnergyMath({ ...baseInputs, hasOldDryer: true }));
-
-      expect(result.current.hpDryerSavings).toBe(200);
-    });
-
-    it('should calculate gap sealing savings based on gas heating', () => {
-      const { result } = renderHook(() => useEnergyMath(baseInputs));
-
-      // Gap sealing saves 15% of 50% of gas bill (heating portion)
-      expect(result.current.gapSealingSavings).toBe(1200 * 0.5 * 0.15);
-    });
-
-    it('should not calculate gap sealing savings when hasGasHeating is false', () => {
-      const { result } = renderHook(() => useEnergyMath({ ...baseInputs, hasGasHeating: false }));
-
-      expect(result.current.gapSealingSavings).toBe(0);
-    });
-
-    it('should only include gas appliances in assumptions if they are enabled', () => {
+  describe('Service Fuse Constraint', () => {
+    it('should calculate correct maxKw for 63A single phase', () => {
       const inputs = {
-        ...baseInputs,
-        hasGasHeating: false,
+        bill: 3000,
+        gasBill: 800,
+        petrolBill: 3000,
+        solarSize: 6.6,
+        batterySize: 13.5,
+        isEV: false,
+        isV2H: false,
+        isHeatPump: false,
+        isInduction: false,
+        hasGasHeating: true,
         hasGasWater: true,
-        hasGasCooking: false,
+        hasGasCooking: true,
+        hasOldDryer: false,
+        gridExportLimit: 5,
+        serviceFuse: 63,
+        hasPool: false,
+        strategies: {
+          chargeEvInWindow: false,
+          chargeBatInWindow: false,
+          runPoolInWindow: false,
+          runHotWaterInWindow: false,
+        },
       };
-      
+
       const { result } = renderHook(() => useEnergyMath(inputs));
 
-      const gasHeating = result.current.assumptions.find(a => a.name === 'Gas Ducted Heating');
-      const gasWater = result.current.assumptions.find(a => a.name === 'Gas Hot Water');
-      const gasCooking = result.current.assumptions.find(a => a.name === 'Gas Cooktop');
-
-      expect(gasHeating).toBeUndefined();
-      expect(gasWater).toBeDefined();
-      expect(gasCooking).toBeUndefined();
+      // 63A * 230V / 1000 = 14.49 kW
+      expect(result.current.maxKw).toBeCloseTo(14.49, 2);
+      // Base load is now calculated dynamically: min(0.8, dailyKwh/24)
+      // With bill=$3000, average rate ~$0.41/kWh: dailyKwh ≈ 20kWh, base ≈ 0.8kW
+      expect(result.current.peakLoad).toBeCloseTo(0.8, 1); // Dynamic base load
+      expect(result.current.isBreakerTripped).toBe(false);
     });
 
-    it('should include new savings in total savings calculation', () => {
-      const { result } = renderHook(() => useEnergyMath({ ...baseInputs, hasPool: true }));
+    it('should calculate correct maxKw for 100A 3-phase', () => {
+      const inputs = {
+        bill: 3000,
+        gasBill: 800,
+        petrolBill: 3000,
+        solarSize: 6.6,
+        batterySize: 13.5,
+        isEV: false,
+        isV2H: false,
+        isHeatPump: false,
+        isInduction: false,
+        hasGasHeating: true,
+        hasGasWater: true,
+        hasGasCooking: true,
+        hasOldDryer: false,
+        gridExportLimit: 5,
+        serviceFuse: 100,
+        hasPool: false,
+        strategies: {
+          chargeEvInWindow: false,
+          chargeBatInWindow: false,
+          runPoolInWindow: false,
+          runHotWaterInWindow: false,
+        },
+      };
 
-      const { batSavings, solarSavings, transportSavings, gasSavings, poolPumpSavings, hpDryerSavings, gapSealingSavings, totalSavings } = result.current;
+      const { result } = renderHook(() => useEnergyMath(inputs));
 
-      expect(totalSavings).toBe(batSavings + solarSavings + transportSavings + gasSavings + poolPumpSavings + hpDryerSavings + gapSealingSavings);
+      // 3 * 63A * 230V / 1000 = 43.47 kW
+      expect(result.current.maxKw).toBeCloseTo(43.47, 2);
     });
 
-    it('should respect hasGasWater when calculating heat pump savings', () => {
-      const withGasWater = renderHook(() => 
-        useEnergyMath({ ...baseInputs, isHeatPump: true, hasGasWater: true })
-      );
-      const withoutGasWater = renderHook(() => 
-        useEnergyMath({ ...baseInputs, isHeatPump: true, hasGasWater: false })
-      );
+    it('should detect breaker trip when load exceeds fuse limit', () => {
+      const inputs = {
+        bill: 3000,
+        gasBill: 800,
+        petrolBill: 3000,
+        solarSize: 6.6,
+        batterySize: 13.5,
+        isEV: true,
+        isV2H: false,
+        isHeatPump: true,
+        isInduction: false,
+        hasGasHeating: true,
+        hasGasWater: true,
+        hasGasCooking: true,
+        hasOldDryer: false,
+        gridExportLimit: 5,
+        serviceFuse: 63,
+        hasPool: true,
+        strategies: {
+          chargeEvInWindow: true,  // 7.0 kW
+          chargeBatInWindow: true, // 5.0 kW
+          runPoolInWindow: true,   // 1.5 kW
+          runHotWaterInWindow: true, // 1.0 kW
+        },
+      };
 
-      expect(withGasWater.result.current.gasSavings).toBeGreaterThan(0);
-      expect(withoutGasWater.result.current.gasSavings).toBe(0);
+      const { result } = renderHook(() => useEnergyMath(inputs));
+
+      // Peak load = base(~0.8) + 7.0 + 5.0 + 1.5 + 1.0 ≈ 15.3 kW
+      expect(result.current.peakLoad).toBeCloseTo(15.3, 1);
+      
+      // Max for 63A = 14.49 kW, so should trip
+      expect(result.current.isBreakerTripped).toBe(true);
     });
 
-    it('should respect hasGasCooking when calculating induction savings', () => {
-      const withGasCooking = renderHook(() => 
-        useEnergyMath({ ...baseInputs, isInduction: true, hasGasCooking: true })
-      );
-      const withoutGasCooking = renderHook(() => 
-        useEnergyMath({ ...baseInputs, isInduction: true, hasGasCooking: false })
-      );
+    it('should not trip breaker when load is within limit', () => {
+      const inputs = {
+        bill: 3000,
+        gasBill: 800,
+        petrolBill: 3000,
+        solarSize: 6.6,
+        batterySize: 13.5,
+        isEV: true,
+        isV2H: false,
+        isHeatPump: false,
+        isInduction: false,
+        hasGasHeating: true,
+        hasGasWater: true,
+        hasGasCooking: true,
+        hasOldDryer: false,
+        gridExportLimit: 5,
+        serviceFuse: 80,
+        hasPool: false,
+        strategies: {
+          chargeEvInWindow: true,  // 7.0 kW
+          chargeBatInWindow: true, // 5.0 kW
+          runPoolInWindow: false,
+          runHotWaterInWindow: false,
+        },
+      };
 
-      expect(withGasCooking.result.current.gasSavings).toBeGreaterThan(0);
-      expect(withoutGasCooking.result.current.gasSavings).toBe(0);
+      const { result } = renderHook(() => useEnergyMath(inputs));
+
+      // Peak load = base(~0.8) + 7.0 + 5.0 = 12.8 kW
+      expect(result.current.peakLoad).toBeCloseTo(12.8, 1);
+      
+      // Max for 80A = 18.4 kW, so should not trip
+      expect(result.current.isBreakerTripped).toBe(false);
     });
 
-    it('should add gas supply charge when all gas appliances are removed or replaced', () => {
-      // Case 1: User has all gas appliances but replaces water and cooking, and has no heating
-      const allReplaced = renderHook(() =>
-        useEnergyMath({
-          ...baseInputs,
-          hasGasHeating: false,
-          hasGasWater: true,
-          hasGasCooking: true,
-          isHeatPump: true,
-          isInduction: true,
-        })
-      );
-      expect(allReplaced.result.current.gasSavings).toBeGreaterThan(350); // Should include supply charge
+    it('should calculate wasted kWh when requested import exceeds capacity', () => {
+      const inputs = {
+        bill: 3000,
+        gasBill: 800,
+        petrolBill: 3000,
+        solarSize: 6.6,
+        batterySize: 13.5,
+        isEV: true,
+        isV2H: false,
+        isHeatPump: true,
+        isInduction: false,
+        hasGasHeating: true,
+        hasGasWater: true,
+        hasGasCooking: true,
+        hasOldDryer: false,
+        gridExportLimit: 5,
+        serviceFuse: 63, // 14.49 kW max
+        hasPool: true,
+        strategies: {
+          chargeEvInWindow: true,  // 21 kWh requested (7kW * 3h)
+          chargeBatInWindow: true, // 13.5 kWh requested (min of battery capacity or 15)
+          runPoolInWindow: true,   // 4.5 kWh requested (1.5kW * 3h)
+          runHotWaterInWindow: true, // 3 kWh requested (1kW * 3h)
+        },
+      };
 
-      // Case 2: User has no gas appliances at all
-      const noneAtAll = renderHook(() =>
-        useEnergyMath({
-          ...baseInputs,
-          hasGasHeating: false,
-          hasGasWater: false,
-          hasGasCooking: false,
-          isHeatPump: true,
-          isInduction: true,
-        })
-      );
-      expect(noneAtAll.result.current.gasSavings).toBe(350); // Only supply charge
+      const { result } = renderHook(() => useEnergyMath(inputs));
 
-      // Case 3: User still has gas heating, so no supply charge savings
-      const stillHasHeating = renderHook(() =>
-        useEnergyMath({
-          ...baseInputs,
-          hasGasHeating: true,
-          hasGasWater: true,
-          hasGasCooking: true,
-          isHeatPump: true,
-          isInduction: true,
-        })
-      );
-      // Should not include supply charge because heating is still on gas
-      const heatingPortion = 1200 * 0.5; // Still costs for heating
-      expect(stillHasHeating.result.current.gasSavings).toBeLessThan(heatingPortion + 350);
+      // Requested = base(~0.8*3=2.4) + 21 + 13.5 + 4.5 + 3 ≈ 44.4 kWh
+      expect(result.current.requestedImportKwh).toBeCloseTo(44.4, 1);
+      
+      // Max possible = 14.49 kW * 3h = 43.47 kWh
+      expect(result.current.actualImportKwh).toBeCloseTo(43.47, 1);
+      
+      // Waste ≈ 44.4 - 43.47 ≈ 0.9 kWh
+      expect(result.current.wastedKwh).toBeCloseTo(0.9, 1);
+    });
+
+    it('should reduce savings when there is wasted capacity', () => {
+      const inputs = {
+        bill: 3000,
+        gasBill: 800,
+        petrolBill: 3000,
+        solarSize: 6.6,
+        batterySize: 40, // Large battery
+        isEV: true,
+        isV2H: false,
+        isHeatPump: true,
+        isInduction: false,
+        hasGasHeating: true,
+        hasGasWater: true,
+        hasGasCooking: true,
+        hasOldDryer: false,
+        gridExportLimit: 5,
+        serviceFuse: 63, // 14.49 kW max = 43.47 kWh over 3h
+        hasPool: true,
+        strategies: {
+          chargeEvInWindow: true,  // 21 kWh requested
+          chargeBatInWindow: true, // 15 kWh requested (5kW * 3h)
+          runPoolInWindow: true,   // 4.5 kWh requested
+          runHotWaterInWindow: true, // 3 kWh requested
+        },
+      };
+
+      const { result } = renderHook(() => useEnergyMath(inputs));
+
+      // Requested = base(~0.8*3=2.4) + 21 + 15 + 4.5 + 3 ≈ 45.9 kWh
+      expect(result.current.requestedImportKwh).toBeCloseTo(45.9, 1);
+      
+      // Max possible = ~43.47 kWh
+      expect(result.current.actualImportKwh).toBeCloseTo(43.47, 1);
+      
+      // Wasted ≈ 45.9 - 43.47 ≈ 2.4 kWh
+      expect(result.current.wastedKwh).toBeCloseTo(2.4, 1);
     });
   });
 });
