@@ -16,6 +16,14 @@ describe('useEnergyMath', () => {
         isV2H: false,
         isHeatPump: false,
         isInduction: false,
+        serviceFuse: 63,
+        hasPool: false,
+        strategies: {
+          chargeEvInWindow: false,
+          chargeBatInWindow: false,
+          runPoolInWindow: false,
+          runHotWaterInWindow: false,
+        },
       };
 
       // Test with 5kW export limit (Single Phase Standard)
@@ -57,6 +65,14 @@ describe('useEnergyMath', () => {
         isHeatPump: false,
         isInduction: false,
         gridExportLimit: 5, // 5kW limit
+        serviceFuse: 63,
+        hasPool: false,
+        strategies: {
+          chargeEvInWindow: false,
+          chargeBatInWindow: false,
+          runPoolInWindow: false,
+          runHotWaterInWindow: false,
+        },
       };
 
       const { result } = renderHook(() => useEnergyMath(inputs));
@@ -77,6 +93,14 @@ describe('useEnergyMath', () => {
         isHeatPump: false,
         isInduction: false,
         gridExportLimit: 0, // No export allowed
+        serviceFuse: 63,
+        hasPool: false,
+        strategies: {
+          chargeEvInWindow: false,
+          chargeBatInWindow: false,
+          runPoolInWindow: false,
+          runHotWaterInWindow: false,
+        },
       };
 
       const { result } = renderHook(() => useEnergyMath(inputs));
@@ -106,6 +130,14 @@ describe('useEnergyMath', () => {
         isHeatPump: false,
         isInduction: false,
         gridExportLimit: 10, // Three Phase limit
+        serviceFuse: 63,
+        hasPool: false,
+        strategies: {
+          chargeEvInWindow: false,
+          chargeBatInWindow: false,
+          runPoolInWindow: false,
+          runHotWaterInWindow: false,
+        },
       };
 
       const { result: tenKwResult } = renderHook(() => useEnergyMath(inputs));
@@ -136,6 +168,14 @@ describe('useEnergyMath', () => {
         isHeatPump: false,
         isInduction: false,
         gridExportLimit: 5,
+        serviceFuse: 63,
+        hasPool: false,
+        strategies: {
+          chargeEvInWindow: false,
+          chargeBatInWindow: false,
+          runPoolInWindow: false,
+          runHotWaterInWindow: false,
+        },
       };
 
       const { result } = renderHook(() => useEnergyMath(inputs));
@@ -150,6 +190,196 @@ describe('useEnergyMath', () => {
       // All results should be finite numbers
       expect(Number.isFinite(result.current.solarSavings)).toBe(true);
       expect(Number.isFinite(result.current.totalSavings)).toBe(true);
+    });
+  });
+
+  describe('Service Fuse Constraint', () => {
+    it('should calculate correct maxKw for 63A single phase', () => {
+      const inputs = {
+        bill: 3000,
+        gasBill: 800,
+        petrolBill: 3000,
+        solarSize: 6.6,
+        batterySize: 13.5,
+        isEV: false,
+        isV2H: false,
+        isHeatPump: false,
+        isInduction: false,
+        gridExportLimit: 5,
+        serviceFuse: 63,
+        hasPool: false,
+        strategies: {
+          chargeEvInWindow: false,
+          chargeBatInWindow: false,
+          runPoolInWindow: false,
+          runHotWaterInWindow: false,
+        },
+      };
+
+      const { result } = renderHook(() => useEnergyMath(inputs));
+
+      // 63A * 230V / 1000 = 14.49 kW
+      expect(result.current.maxKw).toBeCloseTo(14.49, 2);
+      expect(result.current.peakLoad).toBe(0.5); // Base load only
+      expect(result.current.isBreakerTripped).toBe(false);
+    });
+
+    it('should calculate correct maxKw for 100A 3-phase', () => {
+      const inputs = {
+        bill: 3000,
+        gasBill: 800,
+        petrolBill: 3000,
+        solarSize: 6.6,
+        batterySize: 13.5,
+        isEV: false,
+        isV2H: false,
+        isHeatPump: false,
+        isInduction: false,
+        gridExportLimit: 5,
+        serviceFuse: 100,
+        hasPool: false,
+        strategies: {
+          chargeEvInWindow: false,
+          chargeBatInWindow: false,
+          runPoolInWindow: false,
+          runHotWaterInWindow: false,
+        },
+      };
+
+      const { result } = renderHook(() => useEnergyMath(inputs));
+
+      // 3 * 63A * 230V / 1000 = 43.47 kW
+      expect(result.current.maxKw).toBeCloseTo(43.47, 2);
+    });
+
+    it('should detect breaker trip when load exceeds fuse limit', () => {
+      const inputs = {
+        bill: 3000,
+        gasBill: 800,
+        petrolBill: 3000,
+        solarSize: 6.6,
+        batterySize: 13.5,
+        isEV: true,
+        isV2H: false,
+        isHeatPump: true,
+        isInduction: false,
+        gridExportLimit: 5,
+        serviceFuse: 63,
+        hasPool: true,
+        strategies: {
+          chargeEvInWindow: true,  // 7.0 kW
+          chargeBatInWindow: true, // 5.0 kW
+          runPoolInWindow: true,   // 1.5 kW
+          runHotWaterInWindow: true, // 1.0 kW
+        },
+      };
+
+      const { result } = renderHook(() => useEnergyMath(inputs));
+
+      // Peak load = 0.5 + 7.0 + 5.0 + 1.5 + 1.0 = 15.0 kW
+      expect(result.current.peakLoad).toBe(15.0);
+      
+      // Max for 63A = 14.49 kW, so should trip
+      expect(result.current.isBreakerTripped).toBe(true);
+    });
+
+    it('should not trip breaker when load is within limit', () => {
+      const inputs = {
+        bill: 3000,
+        gasBill: 800,
+        petrolBill: 3000,
+        solarSize: 6.6,
+        batterySize: 13.5,
+        isEV: true,
+        isV2H: false,
+        isHeatPump: false,
+        isInduction: false,
+        gridExportLimit: 5,
+        serviceFuse: 80,
+        hasPool: false,
+        strategies: {
+          chargeEvInWindow: true,  // 7.0 kW
+          chargeBatInWindow: true, // 5.0 kW
+          runPoolInWindow: false,
+          runHotWaterInWindow: false,
+        },
+      };
+
+      const { result } = renderHook(() => useEnergyMath(inputs));
+
+      // Peak load = 0.5 + 7.0 + 5.0 = 12.5 kW
+      expect(result.current.peakLoad).toBe(12.5);
+      
+      // Max for 80A = 18.4 kW, so should not trip
+      expect(result.current.isBreakerTripped).toBe(false);
+    });
+
+    it('should calculate wasted kWh when requested import exceeds capacity', () => {
+      const inputs = {
+        bill: 3000,
+        gasBill: 800,
+        petrolBill: 3000,
+        solarSize: 6.6,
+        batterySize: 13.5,
+        isEV: true,
+        isV2H: false,
+        isHeatPump: true,
+        isInduction: false,
+        gridExportLimit: 5,
+        serviceFuse: 63, // 14.49 kW max
+        hasPool: true,
+        strategies: {
+          chargeEvInWindow: true,  // 21 kWh requested (7kW * 3h)
+          chargeBatInWindow: true, // 13.5 kWh requested (min of battery capacity or 15)
+          runPoolInWindow: true,   // 4.5 kWh requested (1.5kW * 3h)
+          runHotWaterInWindow: true, // 3 kWh requested (1kW * 3h)
+        },
+      };
+
+      const { result } = renderHook(() => useEnergyMath(inputs));
+
+      // Requested = 21 + 13.5 + 4.5 + 3 = 42 kWh
+      expect(result.current.requestedImportKwh).toBe(42);
+      
+      // Max possible = 14.49 kW * 3h = 43.47 kWh
+      expect(result.current.actualImportKwh).toBeCloseTo(42, 1);
+      
+      // No waste in this case as requested < max
+      expect(result.current.wastedKwh).toBeCloseTo(0, 1);
+    });
+
+    it('should reduce savings when there is wasted capacity', () => {
+      const inputs = {
+        bill: 3000,
+        gasBill: 800,
+        petrolBill: 3000,
+        solarSize: 6.6,
+        batterySize: 40, // Large battery
+        isEV: true,
+        isV2H: false,
+        isHeatPump: true,
+        isInduction: false,
+        gridExportLimit: 5,
+        serviceFuse: 63, // 14.49 kW max = 43.47 kWh over 3h
+        hasPool: true,
+        strategies: {
+          chargeEvInWindow: true,  // 21 kWh requested
+          chargeBatInWindow: true, // 15 kWh requested (5kW * 3h)
+          runPoolInWindow: true,   // 4.5 kWh requested
+          runHotWaterInWindow: true, // 3 kWh requested
+        },
+      };
+
+      const { result } = renderHook(() => useEnergyMath(inputs));
+
+      // Requested = 21 + 15 + 4.5 + 3 = 43.5 kWh
+      expect(result.current.requestedImportKwh).toBe(43.5);
+      
+      // Max possible = ~43.47 kWh
+      expect(result.current.actualImportKwh).toBeCloseTo(43.47, 1);
+      
+      // Wasted = ~0.03 kWh (minimal)
+      expect(result.current.wastedKwh).toBeGreaterThanOrEqual(0);
     });
   });
 });

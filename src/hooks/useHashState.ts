@@ -11,6 +11,14 @@ interface EnergyState {
   isHeatPump: boolean;
   isInduction: boolean;
   gridExportLimit: number;
+  serviceFuse: number;
+  hasPool: boolean;
+  strategies: {
+    chargeEvInWindow: boolean;
+    chargeBatInWindow: boolean;
+    runPoolInWindow: boolean;
+    runHotWaterInWindow: boolean;
+  };
 }
 
 const DEFAULT_STATE: EnergyState = {
@@ -24,6 +32,14 @@ const DEFAULT_STATE: EnergyState = {
   isHeatPump: false,
   isInduction: false,
   gridExportLimit: 5,
+  serviceFuse: 63,
+  hasPool: false,
+  strategies: {
+    chargeEvInWindow: false,
+    chargeBatInWindow: false,
+    runPoolInWindow: false,
+    runHotWaterInWindow: false,
+  },
 };
 
 // Parse hash string to state object
@@ -40,6 +56,14 @@ const parseHash = (hash: string): EnergyState => {
     isHeatPump: params.get('heatpump') === 'true',
     isInduction: params.get('induction') === 'true',
     gridExportLimit: parseFloat(params.get('exportLimit') || String(DEFAULT_STATE.gridExportLimit)),
+    serviceFuse: parseFloat(params.get('fuse') || String(DEFAULT_STATE.serviceFuse)),
+    hasPool: params.get('pool') === 'true',
+    strategies: {
+      chargeEvInWindow: params.get('evWindow') === 'true',
+      chargeBatInWindow: params.get('batWindow') === 'true',
+      runPoolInWindow: params.get('poolWindow') === 'true',
+      runHotWaterInWindow: params.get('hwWindow') === 'true',
+    },
   };
 };
 
@@ -56,6 +80,12 @@ const serializeHash = (state: EnergyState): string => {
   params.set('heatpump', String(state.isHeatPump));
   params.set('induction', String(state.isInduction));
   params.set('exportLimit', String(state.gridExportLimit));
+  params.set('fuse', String(state.serviceFuse));
+  params.set('pool', String(state.hasPool));
+  params.set('evWindow', String(state.strategies.chargeEvInWindow));
+  params.set('batWindow', String(state.strategies.chargeBatInWindow));
+  params.set('poolWindow', String(state.strategies.runPoolInWindow));
+  params.set('hwWindow', String(state.strategies.runHotWaterInWindow));
   return `#${params.toString()}`;
 };
 

@@ -22,6 +22,14 @@ interface EnergyInputs {
   isHeatPump: boolean;
   isInduction: boolean;
   gridExportLimit: number;
+  serviceFuse: number;
+  hasPool: boolean;
+  strategies: {
+    chargeEvInWindow: boolean;
+    chargeBatInWindow: boolean;
+    runPoolInWindow: boolean;
+    runHotWaterInWindow: boolean;
+  };
 }
 
 interface EnergyResults {
@@ -36,6 +44,12 @@ interface EnergyResults {
   roiYears: number;
   gridPriceWarning?: string;
   exportClippingLoss?: number;
+  maxKw: number;
+  peakLoad: number;
+  isBreakerTripped: boolean;
+  wastedKwh: number;
+  actualImportKwh: number;
+  requestedImportKwh: number;
 }
 
 export const useEnergyMath = (inputs: EnergyInputs): EnergyResults => {
@@ -50,7 +64,10 @@ export const useEnergyMath = (inputs: EnergyInputs): EnergyResults => {
       isV2H, 
       isHeatPump, 
       isInduction,
-      gridExportLimit 
+      gridExportLimit,
+      serviceFuse,
+      hasPool,
+      strategies
     } = inputs;
     
     // Validate grid price against realistic bounds (ACL s18 compliance)
@@ -76,10 +93,62 @@ export const useEnergyMath = (inputs: EnergyInputs): EnergyResults => {
     
     const dailyPeakNeed = adjustedDailyKwh * 0.45; // 45% of usage is in expensive window
 
+    // Service Fuse Constraint Calculations
+    // Calculate Max Grid Draw (kW)
+    const maxKw = serviceFuse === 100 
+      ? (3 * 63 * 230) / 1000  // 3-Phase: ~43kW
+      : (serviceFuse * 230) / 1000;
+
+    // Calculate Peak Instantaneous Load (kW) during 11am-2pm window
+    const baseLoad = 0.5; // kW
+    let peakLoad = baseLoad;
+    
+    if (isEV && strategies.chargeEvInWindow) {
+      peakLoad += 7.0; // EV charging load
+    }
+    if (batterySize > 0 && strategies.chargeBatInWindow) {
+      peakLoad += 5.0; // Battery charging load
+    }
+    if (hasPool && strategies.runPoolInWindow) {
+      peakLoad += 1.5; // Pool pump load
+    }
+    if (isHeatPump && strategies.runHotWaterInWindow) {
+      peakLoad += 1.0; // Heat pump hot water load
+    }
+
+    // Determine Overload
+    const isBreakerTripped = peakLoad > maxKw;
+
+    // Calculate "Capped" Savings
+    const maxPossibleImportKwh = maxKw * 3; // 3-hour physical limit
+    
+    // Calculate requested import during free window
+    let requestedImportKwh = 0;
+    if (isEV && strategies.chargeEvInWindow) {
+      requestedImportKwh += 21; // 7kW * 3h = 21 kWh
+    }
+    if (batterySize > 0 && strategies.chargeBatInWindow) {
+      requestedImportKwh += Math.min(batterySize, 15); // 5kW * 3h = 15 kWh max, or battery capacity
+    }
+    if (hasPool && strategies.runPoolInWindow) {
+      requestedImportKwh += 4.5; // 1.5kW * 3h = 4.5 kWh
+    }
+    if (isHeatPump && strategies.runHotWaterInWindow) {
+      requestedImportKwh += 3; // 1kW * 3h = 3 kWh
+    }
+
+    const actualImportKwh = Math.min(requestedImportKwh, maxPossibleImportKwh);
+    const wastedKwh = requestedImportKwh - actualImportKwh;
+
     // The "Enabler" Formula (Battery/V2H)
     const usableCapacity = isV2H ? 60 : batterySize;
     const dailyShift = Math.min(usableCapacity, dailyPeakNeed);
-    const batSavings = dailyShift * (PEAK_RATE - FREE_WINDOW) * 365;
+    
+    // Adjust battery savings for wasted kWh due to fuse constraint
+    const wastedValue = requestedImportKwh > 0 
+      ? (wastedKwh * (PEAK_RATE - FREE_WINDOW) * 365 / requestedImportKwh)
+      : 0;
+    const batSavings = Math.max(0, dailyShift * (PEAK_RATE - FREE_WINDOW) * 365 - wastedValue);
 
     // Solar Formula with Export Clipping
     const solarGen = solarSize * 3.8 * 365;
@@ -188,6 +257,12 @@ export const useEnergyMath = (inputs: EnergyInputs): EnergyResults => {
       roiYears,
       gridPriceWarning,
       exportClippingLoss,
+      maxKw,
+      peakLoad,
+      isBreakerTripped,
+      wastedKwh,
+      actualImportKwh,
+      requestedImportKwh,
     };
   }, [
     inputs.bill,
@@ -200,5 +275,11 @@ export const useEnergyMath = (inputs: EnergyInputs): EnergyResults => {
     inputs.isHeatPump,
     inputs.isInduction,
     inputs.gridExportLimit,
+    inputs.serviceFuse,
+    inputs.hasPool,
+    inputs.strategies.chargeEvInWindow,
+    inputs.strategies.chargeBatInWindow,
+    inputs.strategies.runPoolInWindow,
+    inputs.strategies.runHotWaterInWindow,
   ]);
 };
