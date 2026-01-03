@@ -1,8 +1,9 @@
 import { AlertTriangle } from 'lucide-react';
 import { Tooltip } from './Tooltip';
 
-// Use the same peak rate as in useEnergyMath for consistency
+// Use the same rate constants as in useEnergyMath for consistency
 const PEAK_RATE = 0.58;
+const FREE_WINDOW = 0.00;
 
 interface LoadGaugeProps {
   peakLoad: number;
@@ -112,7 +113,7 @@ export const LoadGauge = ({ peakLoad, maxKw, isBreakerTripped, wastedKwh, servic
           <div className="bg-slate-50 border-l-4 border-slate-400 p-4 rounded">
             <p className="text-sm text-slate-800">
               📊 <strong>Wasted Capacity:</strong> {wastedKwh.toFixed(1)} kWh/day cannot be imported due to fuse constraints.
-              This reduces your potential savings by ~${(wastedKwh * PEAK_RATE * 365).toFixed(0)}/year.
+              This reduces your potential savings by ~${(wastedKwh * (PEAK_RATE - FREE_WINDOW) * 365).toFixed(0)}/year.
             </p>
           </div>
         )}
