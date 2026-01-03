@@ -2,7 +2,7 @@ import { describe, it, expect } from 'vitest';
 import { renderHook } from '@testing-library/react';
 import { useEnergyMath } from './useEnergyMath';
 
-describe('useEnergyMath with new appliance profiles', () => {
+describe('useEnergyMath', () => {
   const baseInputs = {
     bill: 3000,
     gasBill: 1200,
@@ -18,147 +18,215 @@ describe('useEnergyMath with new appliance profiles', () => {
     hasGasCooking: true,
     hasPool: false,
     hasOldDryer: true,
+    gridExportLimit: 5,
   };
 
-  it('should calculate assumptions based on gas bill', () => {
-    const { result } = renderHook(() => useEnergyMath(baseInputs));
+  // Grid Export Limit tests (from main branch)
+  describe('Grid Export Limit Clipping', () => {
+    it('should not clip exports when grid export limit is unlimited (999+)', () => {
+      const { result } = renderHook(() =>
+        useEnergyMath({ ...baseInputs, gridExportLimit: 999, solarSize: 10 })
+      );
 
-    expect(result.current.assumptions).toBeDefined();
-    expect(result.current.assumptions.length).toBeGreaterThan(0);
-    
-    // Should have gas heating assumption
-    const gasHeating = result.current.assumptions.find(a => a.name === 'Gas Ducted Heating');
-    expect(gasHeating).toBeDefined();
-    expect(gasHeating?.cost).toBe(600); // 50% of 1200
+      expect(result.current.exportClippingLoss).toBe(0);
+    });
+
+    it('should calculate export clipping when solar exceeds base load + export limit', () => {
+      const inputs = {
+        ...baseInputs,
+        solarSize: 10, // 10kW solar system
+        gridExportLimit: 5, // 5kW export limit
+      };
+
+      const { result } = renderHook(() => useEnergyMath(inputs));
+
+      // With a 10kW system and 5kW limit, we expect some clipping
+      // The exact amount depends on base load calculations
+      expect(result.current.exportClippingLoss).toBeGreaterThan(0);
+    });
+
+    it('should not clip when solar system is smaller than export limit', () => {
+      const inputs = {
+        ...baseInputs,
+        solarSize: 4, // 4kW solar system
+        gridExportLimit: 10, // 10kW export limit
+      };
+
+      const { result } = renderHook(() => useEnergyMath(inputs));
+
+      expect(result.current.exportClippingLoss).toBe(0);
+    });
+
+    it('should not clip when there is no solar system', () => {
+      const inputs = {
+        ...baseInputs,
+        solarSize: 0,
+        gridExportLimit: 5,
+      };
+
+      const { result } = renderHook(() => useEnergyMath(inputs));
+
+      expect(result.current.exportClippingLoss).toBe(0);
+    });
+
+    it('should reduce solar savings when export is clipped', () => {
+      const withoutClipping = renderHook(() =>
+        useEnergyMath({ ...baseInputs, solarSize: 10, gridExportLimit: 999 })
+      );
+
+      const withClipping = renderHook(() =>
+        useEnergyMath({ ...baseInputs, solarSize: 10, gridExportLimit: 5 })
+      );
+
+      // Solar savings should be lower when export is clipped
+      expect(withClipping.result.current.solarSavings).toBeLessThan(
+        withoutClipping.result.current.solarSavings
+      );
+    });
   });
 
-  it('should calculate pool pump savings when hasPool is true', () => {
-    const { result } = renderHook(() => useEnergyMath({ ...baseInputs, hasPool: true }));
+  // Appliance profile tests (from my branch)
+  describe('Appliance Profiles', () => {
+    it('should calculate assumptions based on gas bill', () => {
+      const { result } = renderHook(() => useEnergyMath(baseInputs));
 
-    expect(result.current.poolPumpSavings).toBe(900);
-    
-    // Should have pool pump in assumptions
-    const poolPump = result.current.assumptions.find(a => a.name === 'Single Speed Pool Pump');
-    expect(poolPump).toBeDefined();
-    expect(poolPump?.cost).toBe(1300);
-  });
+      expect(result.current.assumptions).toBeDefined();
+      expect(result.current.assumptions.length).toBeGreaterThan(0);
+      
+      // Should have gas heating assumption
+      const gasHeating = result.current.assumptions.find(a => a.name === 'Gas Ducted Heating');
+      expect(gasHeating).toBeDefined();
+      expect(gasHeating?.cost).toBe(600); // 50% of 1200
+    });
 
-  it('should not calculate pool pump savings when hasPool is false', () => {
-    const { result } = renderHook(() => useEnergyMath({ ...baseInputs, hasPool: false }));
+    it('should calculate pool pump savings when hasPool is true', () => {
+      const { result } = renderHook(() => useEnergyMath({ ...baseInputs, hasPool: true }));
 
-    expect(result.current.poolPumpSavings).toBe(0);
-  });
+      expect(result.current.poolPumpSavings).toBe(900);
+      
+      // Should have pool pump in assumptions
+      const poolPump = result.current.assumptions.find(a => a.name === 'Single Speed Pool Pump');
+      expect(poolPump).toBeDefined();
+      expect(poolPump?.cost).toBe(1300);
+    });
 
-  it('should calculate heat pump dryer savings when hasOldDryer is true', () => {
-    const { result } = renderHook(() => useEnergyMath({ ...baseInputs, hasOldDryer: true }));
+    it('should not calculate pool pump savings when hasPool is false', () => {
+      const { result } = renderHook(() => useEnergyMath({ ...baseInputs, hasPool: false }));
 
-    expect(result.current.hpDryerSavings).toBe(200);
-  });
+      expect(result.current.poolPumpSavings).toBe(0);
+    });
 
-  it('should calculate gap sealing savings based on gas heating', () => {
-    const { result } = renderHook(() => useEnergyMath(baseInputs));
+    it('should calculate heat pump dryer savings when hasOldDryer is true', () => {
+      const { result } = renderHook(() => useEnergyMath({ ...baseInputs, hasOldDryer: true }));
 
-    // Gap sealing saves 15% of 50% of gas bill (heating portion)
-    expect(result.current.gapSealingSavings).toBe(1200 * 0.5 * 0.15);
-  });
+      expect(result.current.hpDryerSavings).toBe(200);
+    });
 
-  it('should not calculate gap sealing savings when hasGasHeating is false', () => {
-    const { result } = renderHook(() => useEnergyMath({ ...baseInputs, hasGasHeating: false }));
+    it('should calculate gap sealing savings based on gas heating', () => {
+      const { result } = renderHook(() => useEnergyMath(baseInputs));
 
-    expect(result.current.gapSealingSavings).toBe(0);
-  });
+      // Gap sealing saves 15% of 50% of gas bill (heating portion)
+      expect(result.current.gapSealingSavings).toBe(1200 * 0.5 * 0.15);
+    });
 
-  it('should only include gas appliances in assumptions if they are enabled', () => {
-    const inputs = {
-      ...baseInputs,
-      hasGasHeating: false,
-      hasGasWater: true,
-      hasGasCooking: false,
-    };
-    
-    const { result } = renderHook(() => useEnergyMath(inputs));
+    it('should not calculate gap sealing savings when hasGasHeating is false', () => {
+      const { result } = renderHook(() => useEnergyMath({ ...baseInputs, hasGasHeating: false }));
 
-    const gasHeating = result.current.assumptions.find(a => a.name === 'Gas Ducted Heating');
-    const gasWater = result.current.assumptions.find(a => a.name === 'Gas Hot Water');
-    const gasCooking = result.current.assumptions.find(a => a.name === 'Gas Cooktop');
+      expect(result.current.gapSealingSavings).toBe(0);
+    });
 
-    expect(gasHeating).toBeUndefined();
-    expect(gasWater).toBeDefined();
-    expect(gasCooking).toBeUndefined();
-  });
-
-  it('should include new savings in total savings calculation', () => {
-    const { result } = renderHook(() => useEnergyMath({ ...baseInputs, hasPool: true }));
-
-    const { batSavings, solarSavings, transportSavings, gasSavings, poolPumpSavings, hpDryerSavings, gapSealingSavings, totalSavings } = result.current;
-
-    expect(totalSavings).toBe(batSavings + solarSavings + transportSavings + gasSavings + poolPumpSavings + hpDryerSavings + gapSealingSavings);
-  });
-
-  it('should respect hasGasWater when calculating heat pump savings', () => {
-    const withGasWater = renderHook(() => 
-      useEnergyMath({ ...baseInputs, isHeatPump: true, hasGasWater: true })
-    );
-    const withoutGasWater = renderHook(() => 
-      useEnergyMath({ ...baseInputs, isHeatPump: true, hasGasWater: false })
-    );
-
-    expect(withGasWater.result.current.gasSavings).toBeGreaterThan(0);
-    expect(withoutGasWater.result.current.gasSavings).toBe(0);
-  });
-
-  it('should respect hasGasCooking when calculating induction savings', () => {
-    const withGasCooking = renderHook(() => 
-      useEnergyMath({ ...baseInputs, isInduction: true, hasGasCooking: true })
-    );
-    const withoutGasCooking = renderHook(() => 
-      useEnergyMath({ ...baseInputs, isInduction: true, hasGasCooking: false })
-    );
-
-    expect(withGasCooking.result.current.gasSavings).toBeGreaterThan(0);
-    expect(withoutGasCooking.result.current.gasSavings).toBe(0);
-  });
-
-  it('should add gas supply charge when all gas appliances are removed or replaced', () => {
-    // Case 1: User has all gas appliances but replaces water and cooking, and has no heating
-    const allReplaced = renderHook(() =>
-      useEnergyMath({
+    it('should only include gas appliances in assumptions if they are enabled', () => {
+      const inputs = {
         ...baseInputs,
         hasGasHeating: false,
         hasGasWater: true,
-        hasGasCooking: true,
-        isHeatPump: true,
-        isInduction: true,
-      })
-    );
-    expect(allReplaced.result.current.gasSavings).toBeGreaterThan(350); // Should include supply charge
-
-    // Case 2: User has no gas appliances at all
-    const noneAtAll = renderHook(() =>
-      useEnergyMath({
-        ...baseInputs,
-        hasGasHeating: false,
-        hasGasWater: false,
         hasGasCooking: false,
-        isHeatPump: true,
-        isInduction: true,
-      })
-    );
-    expect(noneAtAll.result.current.gasSavings).toBe(350); // Only supply charge
+      };
+      
+      const { result } = renderHook(() => useEnergyMath(inputs));
 
-    // Case 3: User still has gas heating, so no supply charge savings
-    const stillHasHeating = renderHook(() =>
-      useEnergyMath({
-        ...baseInputs,
-        hasGasHeating: true,
-        hasGasWater: true,
-        hasGasCooking: true,
-        isHeatPump: true,
-        isInduction: true,
-      })
-    );
-    // Should not include supply charge because heating is still on gas
-    const heatingPortion = 1200 * 0.5; // Still costs for heating
-    expect(stillHasHeating.result.current.gasSavings).toBeLessThan(heatingPortion + 350);
+      const gasHeating = result.current.assumptions.find(a => a.name === 'Gas Ducted Heating');
+      const gasWater = result.current.assumptions.find(a => a.name === 'Gas Hot Water');
+      const gasCooking = result.current.assumptions.find(a => a.name === 'Gas Cooktop');
+
+      expect(gasHeating).toBeUndefined();
+      expect(gasWater).toBeDefined();
+      expect(gasCooking).toBeUndefined();
+    });
+
+    it('should include new savings in total savings calculation', () => {
+      const { result } = renderHook(() => useEnergyMath({ ...baseInputs, hasPool: true }));
+
+      const { batSavings, solarSavings, transportSavings, gasSavings, poolPumpSavings, hpDryerSavings, gapSealingSavings, totalSavings } = result.current;
+
+      expect(totalSavings).toBe(batSavings + solarSavings + transportSavings + gasSavings + poolPumpSavings + hpDryerSavings + gapSealingSavings);
+    });
+
+    it('should respect hasGasWater when calculating heat pump savings', () => {
+      const withGasWater = renderHook(() => 
+        useEnergyMath({ ...baseInputs, isHeatPump: true, hasGasWater: true })
+      );
+      const withoutGasWater = renderHook(() => 
+        useEnergyMath({ ...baseInputs, isHeatPump: true, hasGasWater: false })
+      );
+
+      expect(withGasWater.result.current.gasSavings).toBeGreaterThan(0);
+      expect(withoutGasWater.result.current.gasSavings).toBe(0);
+    });
+
+    it('should respect hasGasCooking when calculating induction savings', () => {
+      const withGasCooking = renderHook(() => 
+        useEnergyMath({ ...baseInputs, isInduction: true, hasGasCooking: true })
+      );
+      const withoutGasCooking = renderHook(() => 
+        useEnergyMath({ ...baseInputs, isInduction: true, hasGasCooking: false })
+      );
+
+      expect(withGasCooking.result.current.gasSavings).toBeGreaterThan(0);
+      expect(withoutGasCooking.result.current.gasSavings).toBe(0);
+    });
+
+    it('should add gas supply charge when all gas appliances are removed or replaced', () => {
+      // Case 1: User has all gas appliances but replaces water and cooking, and has no heating
+      const allReplaced = renderHook(() =>
+        useEnergyMath({
+          ...baseInputs,
+          hasGasHeating: false,
+          hasGasWater: true,
+          hasGasCooking: true,
+          isHeatPump: true,
+          isInduction: true,
+        })
+      );
+      expect(allReplaced.result.current.gasSavings).toBeGreaterThan(350); // Should include supply charge
+
+      // Case 2: User has no gas appliances at all
+      const noneAtAll = renderHook(() =>
+        useEnergyMath({
+          ...baseInputs,
+          hasGasHeating: false,
+          hasGasWater: false,
+          hasGasCooking: false,
+          isHeatPump: true,
+          isInduction: true,
+        })
+      );
+      expect(noneAtAll.result.current.gasSavings).toBe(350); // Only supply charge
+
+      // Case 3: User still has gas heating, so no supply charge savings
+      const stillHasHeating = renderHook(() =>
+        useEnergyMath({
+          ...baseInputs,
+          hasGasHeating: true,
+          hasGasWater: true,
+          hasGasCooking: true,
+          isHeatPump: true,
+          isInduction: true,
+        })
+      );
+      // Should not include supply charge because heating is still on gas
+      const heatingPortion = 1200 * 0.5; // Still costs for heating
+      expect(stillHasHeating.result.current.gasSavings).toBeLessThan(heatingPortion + 350);
+    });
   });
 });

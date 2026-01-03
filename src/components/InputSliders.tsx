@@ -11,6 +11,7 @@ interface InputSlidersProps {
     isV2H: boolean;
     isHeatPump: boolean;
     isInduction: boolean;
+    gridExportLimit: number;
   };
   updateState: (newState: Partial<InputSlidersProps['state']>) => void;
 }
@@ -165,6 +166,44 @@ export const InputSliders = ({ state, updateState }: InputSlidersProps) => {
             disabled={state.isV2H}
           />
         </div>
+      </div>
+
+      {/* Grid Export Limit Section */}
+      <div className="pt-4 border-t border-gray-200">
+        <label className="block text-sm font-medium text-slate-400 mb-2 uppercase tracking-widest">
+          Grid Export Limit (DNSP)
+        </label>
+        <select
+          value={state.gridExportLimit}
+          onChange={(e) => updateState({ gridExportLimit: parseFloat(e.target.value) })}
+          className="w-full md:w-80 px-4 py-2 border border-gray-300 rounded-md text-sm focus:ring-2 focus:ring-red-500 focus:border-transparent"
+        >
+          <option value="0">0 kW (Strict Limit / No Export)</option>
+          <option value="5">5 kW (Single Phase Standard)</option>
+          <option value="10">10 kW (Three Phase)</option>
+          <option value="999">Unlimited</option>
+        </select>
+        
+        {/* Export Clipping Warning */}
+        {state.solarSize > 0 && state.gridExportLimit < 999 && (() => {
+          // Calculate estimated base load in kW (average power during daytime)
+          const dailyKwh = state.bill / 365 / 0.41; // Using average rate
+          const estimatedBaseLoadKw = dailyKwh / 24 * 0.4; // ~40% of daily usage during sun hours
+          const peakSolarKw = state.solarSize; // Peak solar generation
+          const potentialExportKw = peakSolarKw - estimatedBaseLoadKw;
+          
+          // Show warning if potential export exceeds limit
+          if (potentialExportKw > state.gridExportLimit) {
+            return (
+              <div className="mt-3 bg-amber-50 border-l-4 border-amber-500 p-3 rounded">
+                <p className="text-sm text-amber-800">
+                  ⚠️ <strong>Export Clipping Active:</strong> Your {state.solarSize}kW system may exceed the {state.gridExportLimit}kW export limit during peak sun hours. You are losing potential income.
+                </p>
+              </div>
+            );
+          }
+          return null;
+        })()}
       </div>
 
       {/* Strategy Toggles */}

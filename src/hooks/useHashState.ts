@@ -15,6 +15,7 @@ interface EnergyState {
   hasGasCooking: boolean;
   hasPool: boolean;
   hasOldDryer: boolean;
+  gridExportLimit: number;
 }
 
 const DEFAULT_STATE: EnergyState = {
@@ -32,6 +33,7 @@ const DEFAULT_STATE: EnergyState = {
   hasGasCooking: true,
   hasPool: false,
   hasOldDryer: true,
+  gridExportLimit: 5,
 };
 
 // Parse hash string to state object
@@ -52,6 +54,7 @@ const parseHash = (hash: string): EnergyState => {
     hasGasCooking: params.get('gascooking') !== 'false',
     hasPool: params.get('pool') === 'true',
     hasOldDryer: params.get('olddryer') !== 'false',
+    gridExportLimit: parseFloat(params.get('exportLimit') || String(DEFAULT_STATE.gridExportLimit)),
   };
 };
 
@@ -72,6 +75,7 @@ const serializeHash = (state: EnergyState): string => {
   params.set('gascooking', String(state.hasGasCooking));
   params.set('pool', String(state.hasPool));
   params.set('olddryer', String(state.hasOldDryer));
+  params.set('exportLimit', String(state.gridExportLimit));
   return `#${params.toString()}`;
 };
 

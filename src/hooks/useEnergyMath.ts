@@ -26,6 +26,7 @@ interface EnergyInputs {
   hasGasCooking: boolean;
   hasPool: boolean;
   hasOldDryer: boolean;
+  gridExportLimit: number;
 }
 
 interface ApplianceAssumption {
@@ -49,6 +50,7 @@ interface EnergyResults {
   roiYears: number;
   gridPriceWarning?: string;
   assumptions: ApplianceAssumption[];
+  exportClippingLoss?: number;
 }
 
 export const useEnergyMath = (inputs: EnergyInputs): EnergyResults => {
@@ -68,6 +70,7 @@ export const useEnergyMath = (inputs: EnergyInputs): EnergyResults => {
       hasGasCooking,
       hasPool,
       hasOldDryer,
+      gridExportLimit 
     } = inputs;
     
     // Build assumptions array based on current setup
@@ -144,10 +147,37 @@ export const useEnergyMath = (inputs: EnergyInputs): EnergyResults => {
     const dailyShift = Math.min(usableCapacity, dailyPeakNeed);
     const batSavings = dailyShift * (PEAK_RATE - FREE_WINDOW) * 365;
 
-    // Solar Formula
+    // Solar Formula with Export Clipping
     const solarGen = solarSize * 3.8 * 365;
     const selfUse = Math.min(adjustedDailyKwh * 365 - dailyShift * 365, solarGen * 0.3);
-    const exportVal = (solarGen - selfUse) * FEED_IN;
+    
+    // Calculate export clipping loss
+    let exportClippingLoss = 0;
+    let actualExportKwh = solarGen - selfUse;
+    
+    if (gridExportLimit < 999 && solarSize > 0) {
+      // Calculate estimated base load during peak sun hours (11am-2pm)
+      const dailyBaseLoadKw = adjustedDailyKwh / 24; // Average kW throughout the day
+      const peakSunBaseLoadKw = dailyBaseLoadKw * 0.6; // Assume slightly higher usage during day
+      
+      // Peak solar generation capacity
+      const peakSolarKw = solarSize;
+      
+      // If peak solar exceeds (base load + export limit), we have clipping
+      const excessCapacityKw = Math.max(0, peakSolarKw - peakSunBaseLoadKw - gridExportLimit);
+      
+      if (excessCapacityKw > 0) {
+        // Conservative estimate: 2.5 hours of peak sun where clipping occurs
+        const clippingHoursPerDay = 2.5;
+        const annualClippingDays = 365;
+        exportClippingLoss = excessCapacityKw * clippingHoursPerDay * annualClippingDays;
+        
+        // Reduce actual export by clipping loss
+        actualExportKwh = Math.max(0, actualExportKwh - exportClippingLoss);
+      }
+    }
+    
+    const exportVal = actualExportKwh * FEED_IN;
     const solarSavings = (selfUse * OFF_PEAK) + exportVal;
 
     // Transport Delta
@@ -241,6 +271,7 @@ export const useEnergyMath = (inputs: EnergyInputs): EnergyResults => {
       roiYears,
       gridPriceWarning,
       assumptions,
+      exportClippingLoss,
     };
   }, [inputs]);
 };
