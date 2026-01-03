@@ -2,8 +2,8 @@ import { ExternalLink } from 'lucide-react';
 
 export const ReferralLinks = () => {
   return (
-    <div className="bg-gradient-to-r from-slate-800 to-slate-900 rounded-lg shadow-lg p-6 text-white">
-      <h2 className="text-2xl font-semibold mb-4">
+    <div className="bg-white rounded-[2.5rem] shadow-sm border border-slate-200 p-8">
+      <h2 className="text-2xl font-semibold text-slate-900 tracking-tighter mb-4">
         Get Started with Partner Programs
       </h2>
       <div className="grid md:grid-cols-2 gap-4">
@@ -12,15 +12,15 @@ export const ReferralLinks = () => {
           href="https://www.ovoenergy.com.au/refer/paul8789"
           target="_blank"
           rel="noopener noreferrer"
-          className="flex items-center justify-between p-4 bg-slate-700 hover:bg-slate-600 rounded-lg transition-colors"
+          className="flex items-center justify-between p-4 bg-slate-50 hover:bg-slate-100 border border-slate-200 rounded-lg transition-colors"
         >
           <div>
-            <h3 className="font-bold text-lg text-emerald-400">OVO Free 3 Plan</h3>
-            <p className="text-sm text-gray-300">
+            <h3 className="font-bold text-lg text-emerald-600">OVO Free 3 Plan</h3>
+            <p className="text-sm text-slate-400">
               Free electricity 11am-2pm daily
             </p>
           </div>
-          <ExternalLink className="w-5 h-5 text-emerald-400" />
+          <ExternalLink className="w-5 h-5 text-emerald-600" />
         </a>
 
         {/* Tesla */}
@@ -28,15 +28,15 @@ export const ReferralLinks = () => {
           href="https://ts.la/paul511330"
           target="_blank"
           rel="noopener noreferrer"
-          className="flex items-center justify-between p-4 bg-slate-700 hover:bg-slate-600 rounded-lg transition-colors"
+          className="flex items-center justify-between p-4 bg-slate-50 hover:bg-slate-100 border border-slate-200 rounded-lg transition-colors"
         >
           <div>
-            <h3 className="font-bold text-lg text-amber-400">Tesla EV</h3>
-            <p className="text-sm text-gray-300">
+            <h3 className="font-bold text-lg text-amber-500">Tesla EV</h3>
+            <p className="text-sm text-slate-400">
               Electric vehicle & energy solutions
             </p>
           </div>
-          <ExternalLink className="w-5 h-5 text-amber-400" />
+          <ExternalLink className="w-5 h-5 text-amber-500" />
         </a>
       </div>
     </div>

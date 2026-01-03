@@ -56,19 +56,19 @@ export const ROITable = ({ results }: ROITableProps) => {
       <table className="min-w-full divide-y divide-gray-200">
         <thead className="bg-slate-100">
           <tr>
-            <th className="px-6 py-3 text-left text-xs font-medium text-slate-700 uppercase tracking-wider">
+            <th className="px-6 py-3 text-left text-xs font-medium text-slate-400 uppercase tracking-widest">
               Strategy
             </th>
-            <th className="px-6 py-3 text-right text-xs font-medium text-slate-700 uppercase tracking-wider">
+            <th className="px-6 py-3 text-right text-xs font-medium text-slate-400 uppercase tracking-widest">
               Upfront Cost
             </th>
-            <th className="px-6 py-3 text-right text-xs font-medium text-slate-700 uppercase tracking-wider">
+            <th className="px-6 py-3 text-right text-xs font-medium text-slate-400 uppercase tracking-widest">
               Annual Saving
             </th>
-            <th className="px-6 py-3 text-right text-xs font-medium text-slate-700 uppercase tracking-wider">
+            <th className="px-6 py-3 text-right text-xs font-medium text-slate-400 uppercase tracking-widest">
               Payback
             </th>
-            <th className="px-6 py-3 text-center text-xs font-medium text-slate-700 uppercase tracking-wider">
+            <th className="px-6 py-3 text-center text-xs font-medium text-slate-400 uppercase tracking-widest">
               Action
             </th>
           </tr>
