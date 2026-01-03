@@ -10,6 +10,11 @@ interface EnergyState {
   isV2H: boolean;
   isHeatPump: boolean;
   isInduction: boolean;
+  hasGasHeating: boolean;
+  hasGasWater: boolean;
+  hasGasCooking: boolean;
+  hasPool: boolean;
+  hasOldDryer: boolean;
   gridExportLimit: number;
 }
 
@@ -23,6 +28,11 @@ const DEFAULT_STATE: EnergyState = {
   isV2H: false,
   isHeatPump: false,
   isInduction: false,
+  hasGasHeating: true,
+  hasGasWater: true,
+  hasGasCooking: true,
+  hasPool: false,
+  hasOldDryer: true,
   gridExportLimit: 5,
 };
 
@@ -39,6 +49,11 @@ const parseHash = (hash: string): EnergyState => {
     isV2H: params.get('v2h') === 'true',
     isHeatPump: params.get('heatpump') === 'true',
     isInduction: params.get('induction') === 'true',
+    hasGasHeating: params.get('gasheating') !== 'false',
+    hasGasWater: params.get('gaswater') !== 'false',
+    hasGasCooking: params.get('gascooking') !== 'false',
+    hasPool: params.get('pool') === 'true',
+    hasOldDryer: params.get('olddryer') !== 'false',
     gridExportLimit: parseFloat(params.get('exportLimit') || String(DEFAULT_STATE.gridExportLimit)),
   };
 };
@@ -55,6 +70,11 @@ const serializeHash = (state: EnergyState): string => {
   params.set('v2h', String(state.isV2H));
   params.set('heatpump', String(state.isHeatPump));
   params.set('induction', String(state.isInduction));
+  params.set('gasheating', String(state.hasGasHeating));
+  params.set('gaswater', String(state.hasGasWater));
+  params.set('gascooking', String(state.hasGasCooking));
+  params.set('pool', String(state.hasPool));
+  params.set('olddryer', String(state.hasOldDryer));
   params.set('exportLimit', String(state.gridExportLimit));
   return `#${params.toString()}`;
 };

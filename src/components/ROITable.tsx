@@ -9,6 +9,9 @@ interface ROITableProps {
     solarSavings: number;
     transportSavings: number;
     gasSavings: number;
+    poolPumpSavings: number;
+    hpDryerSavings: number;
+    gapSealingSavings: number;
     totalSavings: number;
     systemCost: number;
     roiYears: number;
@@ -55,6 +58,27 @@ export const ROITable = ({ results }: ROITableProps) => {
       link: null,
       color: 'orange',
     },
+    {
+      name: 'Variable Speed Pool Pump',
+      cost: 1500,
+      saving: results.poolPumpSavings,
+      link: null,
+      color: 'cyan',
+    },
+    {
+      name: 'Heat Pump Dryer',
+      cost: 1200,
+      saving: results.hpDryerSavings,
+      link: null,
+      color: 'purple',
+    },
+    {
+      name: 'Draught Proofing',
+      cost: 300,
+      saving: results.gapSealingSavings,
+      link: null,
+      color: 'teal',
+    },
   ].filter(s => s.saving > 0 || s.name === 'OVO Free 3 Plan');
 
   return (
@@ -98,6 +122,9 @@ export const ROITable = ({ results }: ROITableProps) => {
               yellow: 'text-yellow-600',
               blue: 'text-blue-600',
               orange: 'text-orange-600',
+              cyan: 'text-cyan-600',
+              purple: 'text-purple-600',
+              teal: 'text-teal-600',
             };
             
             return (
