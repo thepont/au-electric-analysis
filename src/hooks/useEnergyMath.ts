@@ -179,8 +179,12 @@ export const useEnergyMath = (inputs: EnergyInputs): EnergyResults => {
       
       gasSavings = heatPumpSavings + inductionSavings;
       
-      // If all gas appliances are gone, add supply charge savings
-      if (isHeatPump && isInduction && !hasGasHeating) {
+      // If all gas appliances are gone (either never had them or replacing them), add supply charge savings
+      const noGasHeating = !hasGasHeating;
+      const noGasWater = !hasGasWater || isHeatPump;
+      const noGasCooking = !hasGasCooking || isInduction;
+      
+      if (noGasHeating && noGasWater && noGasCooking) {
         gasSavings += GAS_SUPPLY_CHARGE;
       }
     }
@@ -238,21 +242,5 @@ export const useEnergyMath = (inputs: EnergyInputs): EnergyResults => {
       gridPriceWarning,
       assumptions,
     };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [
-    inputs.bill,
-    inputs.gasBill,
-    inputs.petrolBill,
-    inputs.solarSize,
-    inputs.batterySize,
-    inputs.isEV,
-    inputs.isV2H,
-    inputs.isHeatPump,
-    inputs.isInduction,
-    inputs.hasGasHeating,
-    inputs.hasGasWater,
-    inputs.hasGasCooking,
-    inputs.hasPool,
-    inputs.hasOldDryer,
-  ]);
+  }, [inputs]);
 };

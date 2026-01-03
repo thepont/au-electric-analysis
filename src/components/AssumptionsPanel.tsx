@@ -1,5 +1,10 @@
 import { Wind, Droplets, Flame, Waves, Shirt, AlertTriangle } from 'lucide-react';
 
+// Pool pump constants
+const POOL_PUMP_ANNUAL_KWH = 4000;
+const EV_ANNUAL_KWH_COMPARISON = 2700; // ~15,000km driving
+const POOL_PUMP_UPGRADE_PAYBACK_YEARS = 1.6;
+
 interface ApplianceAssumption {
   name: string;
   cost: number;
@@ -51,9 +56,9 @@ export const AssumptionsPanel = ({ assumptions, applianceProfile, updateProfile 
                 ⚠️ Priority Alert: The "Pool Tax"
               </h4>
               <p className="text-sm text-red-800 leading-relaxed">
-                Your pool is burning more cash than your car. A standard single-speed pump consumes ~4,000 kWh/year 
-                (almost double what an EV uses). <strong>Fix the pump BEFORE you buy a battery.</strong> 
-                Upgrading to a variable speed pump has the fastest payback in home energy (~1.6 years).
+                Your pool is burning more cash than your car. A standard single-speed pump consumes ~{POOL_PUMP_ANNUAL_KWH.toLocaleString()} kWh/year 
+                (almost double what an EV uses at ~{EV_ANNUAL_KWH_COMPARISON.toLocaleString()} kWh/year). <strong>Fix the pump BEFORE you buy a battery.</strong> 
+                Upgrading to a variable speed pump has the fastest payback in home energy (~{POOL_PUMP_UPGRADE_PAYBACK_YEARS} years).
               </p>
             </div>
           </div>

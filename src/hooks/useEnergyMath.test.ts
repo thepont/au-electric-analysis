@@ -118,4 +118,47 @@ describe('useEnergyMath with new appliance profiles', () => {
     expect(withGasCooking.result.current.gasSavings).toBeGreaterThan(0);
     expect(withoutGasCooking.result.current.gasSavings).toBe(0);
   });
+
+  it('should add gas supply charge when all gas appliances are removed or replaced', () => {
+    // Case 1: User has all gas appliances but replaces water and cooking, and has no heating
+    const allReplaced = renderHook(() =>
+      useEnergyMath({
+        ...baseInputs,
+        hasGasHeating: false,
+        hasGasWater: true,
+        hasGasCooking: true,
+        isHeatPump: true,
+        isInduction: true,
+      })
+    );
+    expect(allReplaced.result.current.gasSavings).toBeGreaterThan(350); // Should include supply charge
+
+    // Case 2: User has no gas appliances at all
+    const noneAtAll = renderHook(() =>
+      useEnergyMath({
+        ...baseInputs,
+        hasGasHeating: false,
+        hasGasWater: false,
+        hasGasCooking: false,
+        isHeatPump: true,
+        isInduction: true,
+      })
+    );
+    expect(noneAtAll.result.current.gasSavings).toBe(350); // Only supply charge
+
+    // Case 3: User still has gas heating, so no supply charge savings
+    const stillHasHeating = renderHook(() =>
+      useEnergyMath({
+        ...baseInputs,
+        hasGasHeating: true,
+        hasGasWater: true,
+        hasGasCooking: true,
+        isHeatPump: true,
+        isInduction: true,
+      })
+    );
+    // Should not include supply charge because heating is still on gas
+    const heatingPortion = 1200 * 0.5; // Still costs for heating
+    expect(stillHasHeating.result.current.gasSavings).toBeLessThan(heatingPortion + 350);
+  });
 });
