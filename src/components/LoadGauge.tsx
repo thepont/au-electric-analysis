@@ -97,7 +97,7 @@ export const LoadGauge = ({ peakLoad, maxKw, isBreakerTripped, wastedKwh, servic
                 <p className="text-sm text-blue-700 mb-2">
                   Upgrading to 3-Phase (100A / ~43kW) would unlock this capacity and prevent overloads.
                 </p>
-                <Tooltip content="Upgrading your connection may trigger a move to 'Demand Tariffs' depending on your DNSP. Smart meters record usage in 5-minute intervals, and some networks charge based on your highest single spike. This could add $50/month in demand charges, potentially wiping out your arbitrage savings. Check your energy fact sheet first.">
+                <Tooltip content="Upgrading to 3-Phase may trigger a move to 'Demand Tariffs' depending on your DNSP. Some networks charge based on your highest single spike in 5-minute intervals, which could add $50/month in demand charges, potentially wiping out your arbitrage savings. Check your energy fact sheet first.">
                   <span className="text-xs text-blue-600 cursor-help underline">
                     ⚠️ Warning: May trigger Demand Tariffs
                   </span>
