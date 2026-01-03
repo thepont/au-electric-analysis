@@ -18,6 +18,9 @@ describe('useEnergyMath', () => {
         isInduction: false,
         serviceFuse: 63,
         hasPool: false,
+        timerResistiveHW: false,
+        timerOldPool: false,
+        timerStorageHeater: false,
         strategies: {
           chargeEvInWindow: false,
           chargeBatInWindow: false,
@@ -67,6 +70,9 @@ describe('useEnergyMath', () => {
         gridExportLimit: 5, // 5kW limit
         serviceFuse: 63,
         hasPool: false,
+        timerResistiveHW: false,
+        timerOldPool: false,
+        timerStorageHeater: false,
         strategies: {
           chargeEvInWindow: false,
           chargeBatInWindow: false,
@@ -95,6 +101,9 @@ describe('useEnergyMath', () => {
         gridExportLimit: 0, // No export allowed
         serviceFuse: 63,
         hasPool: false,
+        timerResistiveHW: false,
+        timerOldPool: false,
+        timerStorageHeater: false,
         strategies: {
           chargeEvInWindow: false,
           chargeBatInWindow: false,
@@ -132,6 +141,9 @@ describe('useEnergyMath', () => {
         gridExportLimit: 10, // Three Phase limit
         serviceFuse: 63,
         hasPool: false,
+        timerResistiveHW: false,
+        timerOldPool: false,
+        timerStorageHeater: false,
         strategies: {
           chargeEvInWindow: false,
           chargeBatInWindow: false,
@@ -170,6 +182,9 @@ describe('useEnergyMath', () => {
         gridExportLimit: 5,
         serviceFuse: 63,
         hasPool: false,
+        timerResistiveHW: false,
+        timerOldPool: false,
+        timerStorageHeater: false,
         strategies: {
           chargeEvInWindow: false,
           chargeBatInWindow: false,
@@ -208,6 +223,9 @@ describe('useEnergyMath', () => {
         gridExportLimit: 5,
         serviceFuse: 63,
         hasPool: false,
+        timerResistiveHW: false,
+        timerOldPool: false,
+        timerStorageHeater: false,
         strategies: {
           chargeEvInWindow: false,
           chargeBatInWindow: false,
@@ -238,6 +256,9 @@ describe('useEnergyMath', () => {
         gridExportLimit: 5,
         serviceFuse: 100,
         hasPool: false,
+        timerResistiveHW: false,
+        timerOldPool: false,
+        timerStorageHeater: false,
         strategies: {
           chargeEvInWindow: false,
           chargeBatInWindow: false,
@@ -266,6 +287,9 @@ describe('useEnergyMath', () => {
         gridExportLimit: 5,
         serviceFuse: 63,
         hasPool: true,
+        timerResistiveHW: false,
+        timerOldPool: false,
+        timerStorageHeater: false,
         strategies: {
           chargeEvInWindow: true,  // 7.0 kW
           chargeBatInWindow: true, // 5.0 kW
@@ -297,6 +321,9 @@ describe('useEnergyMath', () => {
         gridExportLimit: 5,
         serviceFuse: 80,
         hasPool: false,
+        timerResistiveHW: false,
+        timerOldPool: false,
+        timerStorageHeater: false,
         strategies: {
           chargeEvInWindow: true,  // 7.0 kW
           chargeBatInWindow: true, // 5.0 kW
@@ -328,6 +355,9 @@ describe('useEnergyMath', () => {
         gridExportLimit: 5,
         serviceFuse: 63, // 14.49 kW max
         hasPool: true,
+        timerResistiveHW: false,
+        timerOldPool: false,
+        timerStorageHeater: false,
         strategies: {
           chargeEvInWindow: true,  // 21 kWh requested (7kW * 3h)
           chargeBatInWindow: true, // 13.5 kWh requested (min of battery capacity or 15)
@@ -362,6 +392,9 @@ describe('useEnergyMath', () => {
         gridExportLimit: 5,
         serviceFuse: 63, // 14.49 kW max = 43.47 kWh over 3h
         hasPool: true,
+        timerResistiveHW: false,
+        timerOldPool: false,
+        timerStorageHeater: false,
         strategies: {
           chargeEvInWindow: true,  // 21 kWh requested
           chargeBatInWindow: true, // 15 kWh requested (5kW * 3h)
@@ -380,6 +413,261 @@ describe('useEnergyMath', () => {
       
       // Wasted = ~0.03 kWh (minimal)
       expect(result.current.wastedKwh).toBeGreaterThanOrEqual(0);
+    });
+  });
+
+  describe('Legacy Timer Hacks', () => {
+    it('should calculate load and savings for Timer: Resistive HW', () => {
+      const inputs = {
+        bill: 3000,
+        gasBill: 800,
+        petrolBill: 3000,
+        solarSize: 6.6,
+        batterySize: 13.5,
+        isEV: false,
+        isV2H: false,
+        isHeatPump: false,
+        isInduction: false,
+        gridExportLimit: 5,
+        serviceFuse: 63,
+        hasPool: false,
+        timerResistiveHW: true,
+        timerOldPool: false,
+        timerStorageHeater: false,
+        strategies: {
+          chargeEvInWindow: false,
+          chargeBatInWindow: false,
+          runPoolInWindow: false,
+          runHotWaterInWindow: false,
+        },
+      };
+
+      const { result } = renderHook(() => useEnergyMath(inputs));
+
+      // Peak load should include 3.6 kW from resistive HW
+      expect(result.current.peakLoad).toBe(0.5 + 3.6);
+      
+      // Requested import should be 10.8 kWh (3.6kW * 3h)
+      expect(result.current.requestedImportKwh).toBe(10.8);
+      
+      // Should have savings from moving load to free window
+      // 10.8 kWh/day * 365 days * $0.24/kWh = $946.08/year
+      expect(result.current.legacyTimerSavings).toBeCloseTo(946.08, 1);
+    });
+
+    it('should calculate load and savings for Timer: Old Pool Pump', () => {
+      const inputs = {
+        bill: 3000,
+        gasBill: 800,
+        petrolBill: 3000,
+        solarSize: 6.6,
+        batterySize: 13.5,
+        isEV: false,
+        isV2H: false,
+        isHeatPump: false,
+        isInduction: false,
+        gridExportLimit: 5,
+        serviceFuse: 63,
+        hasPool: false,
+        timerResistiveHW: false,
+        timerOldPool: true,
+        timerStorageHeater: false,
+        strategies: {
+          chargeEvInWindow: false,
+          chargeBatInWindow: false,
+          runPoolInWindow: false,
+          runHotWaterInWindow: false,
+        },
+      };
+
+      const { result } = renderHook(() => useEnergyMath(inputs));
+
+      // Peak load should include 1.5 kW from old pool pump
+      expect(result.current.peakLoad).toBe(0.5 + 1.5);
+      
+      // Requested import should be 4.5 kWh (1.5kW * 3h)
+      expect(result.current.requestedImportKwh).toBe(4.5);
+      
+      // Should have savings from moving load to free window
+      // 4.5 kWh/day * 365 days * $0.24/kWh = $394.20/year
+      expect(result.current.legacyTimerSavings).toBeCloseTo(394.20, 0);
+    });
+
+    it('should calculate load and savings for Timer: Storage Heater', () => {
+      const inputs = {
+        bill: 3000,
+        gasBill: 800,
+        petrolBill: 3000,
+        solarSize: 6.6,
+        batterySize: 13.5,
+        isEV: false,
+        isV2H: false,
+        isHeatPump: false,
+        isInduction: false,
+        gridExportLimit: 5,
+        serviceFuse: 63,
+        hasPool: false,
+        timerResistiveHW: false,
+        timerOldPool: false,
+        timerStorageHeater: true,
+        strategies: {
+          chargeEvInWindow: false,
+          chargeBatInWindow: false,
+          runPoolInWindow: false,
+          runHotWaterInWindow: false,
+        },
+      };
+
+      const { result } = renderHook(() => useEnergyMath(inputs));
+
+      // Peak load should include 2.0 kW from storage heater
+      expect(result.current.peakLoad).toBe(0.5 + 2.0);
+      
+      // Requested import should be 6.0 kWh (2.0kW * 3h)
+      expect(result.current.requestedImportKwh).toBe(6.0);
+      
+      // Should have savings from moving load to free window
+      // 6.0 kWh/day * 365 days * $0.24/kWh = $525.60/year
+      expect(result.current.legacyTimerSavings).toBeCloseTo(525.60, 0);
+    });
+
+    it('should calculate combined load when multiple timers are active', () => {
+      const inputs = {
+        bill: 3000,
+        gasBill: 800,
+        petrolBill: 3000,
+        solarSize: 6.6,
+        batterySize: 13.5,
+        isEV: false,
+        isV2H: false,
+        isHeatPump: false,
+        isInduction: false,
+        gridExportLimit: 5,
+        serviceFuse: 63,
+        hasPool: false,
+        timerResistiveHW: true,
+        timerOldPool: true,
+        timerStorageHeater: true,
+        strategies: {
+          chargeEvInWindow: false,
+          chargeBatInWindow: false,
+          runPoolInWindow: false,
+          runHotWaterInWindow: false,
+        },
+      };
+
+      const { result } = renderHook(() => useEnergyMath(inputs));
+
+      // Peak load = 0.5 + 3.6 + 1.5 + 2.0 = 7.6 kW
+      expect(result.current.peakLoad).toBe(7.6);
+      
+      // Requested import = 10.8 + 4.5 + 6.0 = 21.3 kWh
+      expect(result.current.requestedImportKwh).toBe(21.3);
+      
+      // Combined savings
+      expect(result.current.legacyTimerSavings).toBeCloseTo(1865.88, 1);
+    });
+
+    it('should trigger breaker trip warning with legacy timers + EV', () => {
+      const inputs = {
+        bill: 3000,
+        gasBill: 800,
+        petrolBill: 3000,
+        solarSize: 6.6,
+        batterySize: 13.5,
+        isEV: true,
+        isV2H: false,
+        isHeatPump: false,
+        isInduction: false,
+        gridExportLimit: 5,
+        serviceFuse: 63, // 14.49 kW max
+        hasPool: false,
+        timerResistiveHW: true,
+        timerOldPool: true,
+        timerStorageHeater: false,
+        strategies: {
+          chargeEvInWindow: true,  // 7.0 kW
+          chargeBatInWindow: false,
+          runPoolInWindow: false,
+          runHotWaterInWindow: false,
+        },
+      };
+
+      const { result } = renderHook(() => useEnergyMath(inputs));
+
+      // Peak load = 0.5 + 7.0 + 3.6 + 1.5 = 12.6 kW
+      expect(result.current.peakLoad).toBe(12.6);
+      
+      // Should not trip (12.6 < 14.49)
+      expect(result.current.isBreakerTripped).toBe(false);
+    });
+
+    it('should trigger breaker trip with all timers + EV + battery charging', () => {
+      const inputs = {
+        bill: 3000,
+        gasBill: 800,
+        petrolBill: 3000,
+        solarSize: 6.6,
+        batterySize: 13.5,
+        isEV: true,
+        isV2H: false,
+        isHeatPump: false,
+        isInduction: false,
+        gridExportLimit: 5,
+        serviceFuse: 63, // 14.49 kW max
+        hasPool: false,
+        timerResistiveHW: true,
+        timerOldPool: true,
+        timerStorageHeater: false,
+        strategies: {
+          chargeEvInWindow: true,  // 7.0 kW
+          chargeBatInWindow: true, // 5.0 kW
+          runPoolInWindow: false,
+          runHotWaterInWindow: false,
+        },
+      };
+
+      const { result } = renderHook(() => useEnergyMath(inputs));
+
+      // Peak load = 0.5 + 7.0 + 5.0 + 3.6 + 1.5 = 17.6 kW
+      expect(result.current.peakLoad).toBe(17.6);
+      
+      // Should trip (17.6 > 14.49)
+      expect(result.current.isBreakerTripped).toBe(true);
+    });
+
+    it('should include timer costs in system cost calculation', () => {
+      const inputs = {
+        bill: 3000,
+        gasBill: 800,
+        petrolBill: 3000,
+        solarSize: 0,
+        batterySize: 0,
+        isEV: false,
+        isV2H: false,
+        isHeatPump: false,
+        isInduction: false,
+        gridExportLimit: 5,
+        serviceFuse: 63,
+        hasPool: false,
+        timerResistiveHW: true,
+        timerOldPool: true,
+        timerStorageHeater: true,
+        strategies: {
+          chargeEvInWindow: false,
+          chargeBatInWindow: false,
+          runPoolInWindow: false,
+          runHotWaterInWindow: false,
+        },
+      };
+
+      const { result } = renderHook(() => useEnergyMath(inputs));
+
+      // System cost should be $50 + $20 + $0 = $70
+      expect(result.current.systemCost).toBe(70);
+      
+      // ROI should be excellent (less than 1 month)
+      expect(result.current.roiYears).toBeLessThan(0.1);
     });
   });
 });
