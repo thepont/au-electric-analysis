@@ -1,0 +1,20 @@
+{
+  "name": "@thepont/ovo-hacker-math",
+  "version": "1.0.0",
+  "description": "Core arbitrage logic for the OVO Energy 'Free 3' Battery Strategy.",
+  "main": "src/index.js",
+  "type": "module",
+  "license": "MIT",
+  "keywords": [
+    "ovo-energy",
+    "energy-arbitrage",
+    "battery",
+    "solar",
+    "australia"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/thepont/au-electric-analysis.git",
+    "directory": "packages/ovo-hacker-math"
+  }
+}
