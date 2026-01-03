@@ -21,9 +21,13 @@ interface EnergyInputs {
   isV2H: boolean;
   isHeatPump: boolean;
   isInduction: boolean;
+  hasGasHeating: boolean;
+  hasGasWater: boolean;
+  hasGasCooking: boolean;
+  hasPool: boolean;
+  hasOldDryer: boolean;
   gridExportLimit: number;
   serviceFuse: number;
-  hasPool: boolean;
   strategies: {
     chargeEvInWindow: boolean;
     chargeBatInWindow: boolean;
@@ -32,17 +36,27 @@ interface EnergyInputs {
   };
 }
 
+interface ApplianceAssumption {
+  name: string;
+  cost: number;
+  icon: string;
+}
+
 interface EnergyResults {
   batSavings: number;
   solarSavings: number;
   transportSavings: number;
   gasSavings: number;
+  poolPumpSavings: number;
+  hpDryerSavings: number;
+  gapSealingSavings: number;
   totalSavings: number;
   legacyCosts: number[];
   hackedCosts: number[];
   systemCost: number;
   roiYears: number;
   gridPriceWarning?: string;
+  assumptions: ApplianceAssumption[];
   exportClippingLoss?: number;
   maxKw: number;
   peakLoad: number;
@@ -64,11 +78,61 @@ export const useEnergyMath = (inputs: EnergyInputs): EnergyResults => {
       isV2H, 
       isHeatPump, 
       isInduction,
+      hasGasHeating,
+      hasGasWater,
+      hasGasCooking,
+      hasPool,
+      hasOldDryer,
       gridExportLimit,
       serviceFuse,
-      hasPool,
       strategies
     } = inputs;
+    
+    // Build assumptions array based on current setup
+    const assumptions: ApplianceAssumption[] = [];
+    
+    if (gasBill > 0) {
+      // Typical AU Split: 50% Heat, 35% Water, 15% Cook
+      if (hasGasHeating) {
+        assumptions.push({ 
+          name: "Gas Ducted Heating", 
+          cost: gasBill * 0.50, 
+          icon: "Wind" 
+        });
+      }
+      if (hasGasWater) {
+        assumptions.push({ 
+          name: "Gas Hot Water", 
+          cost: gasBill * 0.35, 
+          icon: "Droplets" 
+        });
+      }
+      if (hasGasCooking) {
+        assumptions.push({ 
+          name: "Gas Cooktop", 
+          cost: gasBill * 0.15, 
+          icon: "Flame" 
+        });
+      }
+    }
+    
+    if (hasPool) {
+      // Single speed pump: ~1.5kW * 8hrs * 365 = ~4,300kWh ($1,300/yr)
+      assumptions.push({ 
+        name: "Single Speed Pool Pump", 
+        cost: 1300, 
+        icon: "Waves" 
+      });
+    }
+    
+    if (hasOldDryer) {
+      // Vented dryer: ~4kWh per load * 3 loads/week = ~$250/yr
+      assumptions.push({ 
+        name: "Vented Dryer", 
+        cost: 250, 
+        icon: "Shirt" 
+      });
+    }
     
     // Validate grid price against realistic bounds (ACL s18 compliance)
     let gridPriceWarning: string | undefined;
@@ -83,10 +147,10 @@ export const useEnergyMath = (inputs: EnergyInputs): EnergyResults => {
     
     // Appliance Shift (Gas -> Elec)
     let gasElecShift = 0;
-    if (isHeatPump) {
+    if (isHeatPump && hasGasWater) {
       gasElecShift += (gasBill * 0.35) / 4.0; // COP 4.0
     }
-    if (isInduction) {
+    if (isInduction && hasGasCooking) {
       gasElecShift += (gasBill * 0.15) / 2.0;
     }
     adjustedDailyKwh += gasElecShift / 365;
@@ -198,14 +262,14 @@ export const useEnergyMath = (inputs: EnergyInputs): EnergyResults => {
     if (isHeatPump || isInduction) {
       // Savings from converting gas appliances
       let heatPumpSavings = 0;
-      if (isHeatPump) {
+      if (isHeatPump && hasGasWater) {
         const heatPumpGasUsage = gasBill * 0.35; // 35% of gas bill is hot water
         const heatPumpElecCost = (heatPumpGasUsage / 4.0) * OFF_PEAK; // COP 4.0, charged at off-peak
         heatPumpSavings = heatPumpGasUsage - heatPumpElecCost;
       }
       
       let inductionSavings = 0;
-      if (isInduction) {
+      if (isInduction && hasGasCooking) {
         const inductionGasUsage = gasBill * 0.15; // 15% of gas bill is cooking
         const inductionElecCost = (inductionGasUsage / 2.0) * OFF_PEAK; // 50% efficiency, charged at off-peak
         inductionSavings = inductionGasUsage - inductionElecCost;
@@ -213,13 +277,27 @@ export const useEnergyMath = (inputs: EnergyInputs): EnergyResults => {
       
       gasSavings = heatPumpSavings + inductionSavings;
       
-      // If all gas appliances are gone, add supply charge savings
-      if (isHeatPump && isInduction) {
+      // If all gas appliances are gone (either never had them or replacing them), add supply charge savings
+      const noGasHeating = !hasGasHeating;
+      const noGasWater = !hasGasWater || isHeatPump;
+      const noGasCooking = !hasGasCooking || isInduction;
+      
+      if (noGasHeating && noGasWater && noGasCooking) {
         gasSavings += GAS_SUPPLY_CHARGE;
       }
     }
 
-    const totalSavings = batSavings + solarSavings + transportSavings + gasSavings;
+    // New Upgrade Savings
+    // Pool Pump: Variable speed pump saves ~$900/yr if pool exists
+    const poolPumpSavings = hasPool ? 900 : 0;
+    
+    // Heat Pump Dryer: Saves ~$200/yr if old dryer exists
+    const hpDryerSavings = hasOldDryer ? 200 : 0;
+    
+    // Gap Sealing: Saves 15% of heating bill
+    const gapSealingSavings = hasGasHeating ? gasBill * 0.50 * 0.15 : 0;
+
+    const totalSavings = batSavings + solarSavings + transportSavings + gasSavings + poolPumpSavings + hpDryerSavings + gapSealingSavings;
 
     // Calculate system costs
     const solarCost = solarSize * 1000;
@@ -251,12 +329,16 @@ export const useEnergyMath = (inputs: EnergyInputs): EnergyResults => {
       solarSavings,
       transportSavings,
       gasSavings,
+      poolPumpSavings,
+      hpDryerSavings,
+      gapSealingSavings,
       totalSavings,
       legacyCosts,
       hackedCosts,
       systemCost,
       roiYears,
       gridPriceWarning,
+      assumptions,
       exportClippingLoss,
       maxKw,
       peakLoad,
@@ -275,9 +357,13 @@ export const useEnergyMath = (inputs: EnergyInputs): EnergyResults => {
     inputs.isV2H,
     inputs.isHeatPump,
     inputs.isInduction,
+    inputs.hasGasHeating,
+    inputs.hasGasWater,
+    inputs.hasGasCooking,
+    inputs.hasPool,
+    inputs.hasOldDryer,
     inputs.gridExportLimit,
     inputs.serviceFuse,
-    inputs.hasPool,
     inputs.strategies.chargeEvInWindow,
     inputs.strategies.chargeBatInWindow,
     inputs.strategies.runPoolInWindow,

@@ -1,6 +1,7 @@
 import { useHashState } from './hooks/useHashState';
 import { useEnergyMath } from './hooks/useEnergyMath';
 import { InputSliders } from './components/InputSliders';
+import { AssumptionsPanel } from './components/AssumptionsPanel';
 import { ROITable } from './components/ROITable';
 import { CostGraph } from './components/CostGraph';
 import { ReferralLinks } from './components/ReferralLinks';
@@ -55,6 +56,27 @@ function App() {
               wastedKwh={results.wastedKwh}
               serviceFuse={state.serviceFuse}
             />
+          )}
+
+          {/* Assumptions Panel */}
+          {hasAcceptedDisclaimer && (
+            <div className="bg-white rounded-[2.5rem] shadow-sm border border-slate-200 p-8">
+              <h2 className="text-2xl font-semibold text-slate-900 tracking-tighter mb-4 flex items-center">
+                <span className="w-2 h-8 bg-blue-600 rounded mr-3"></span>
+                Your Current Setup (Estimated)
+              </h2>
+              <AssumptionsPanel 
+                assumptions={results.assumptions}
+                applianceProfile={{
+                  hasGasHeating: state.hasGasHeating,
+                  hasGasWater: state.hasGasWater,
+                  hasGasCooking: state.hasGasCooking,
+                  hasPool: state.hasPool,
+                  hasOldDryer: state.hasOldDryer,
+                }}
+                updateProfile={(updates) => updateState(updates)}
+              />
+            </div>
           )}
 
           {/* ROI Leaderboard */}
