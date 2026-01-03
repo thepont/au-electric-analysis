@@ -10,6 +10,7 @@ interface EnergyState {
   isV2H: boolean;
   isHeatPump: boolean;
   isInduction: boolean;
+  gridExportLimit: number;
 }
 
 const DEFAULT_STATE: EnergyState = {
@@ -22,6 +23,7 @@ const DEFAULT_STATE: EnergyState = {
   isV2H: false,
   isHeatPump: false,
   isInduction: false,
+  gridExportLimit: 5,
 };
 
 // Parse hash string to state object
@@ -37,6 +39,7 @@ const parseHash = (hash: string): EnergyState => {
     isV2H: params.get('v2h') === 'true',
     isHeatPump: params.get('heatpump') === 'true',
     isInduction: params.get('induction') === 'true',
+    gridExportLimit: parseFloat(params.get('exportLimit') || String(DEFAULT_STATE.gridExportLimit)),
   };
 };
 
@@ -52,6 +55,7 @@ const serializeHash = (state: EnergyState): string => {
   params.set('v2h', String(state.isV2H));
   params.set('heatpump', String(state.isHeatPump));
   params.set('induction', String(state.isInduction));
+  params.set('exportLimit', String(state.gridExportLimit));
   return `#${params.toString()}`;
 };
 
