@@ -1,19 +1,24 @@
 import { AlertTriangle } from 'lucide-react';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 
 interface DisclaimerModalProps {
   onAccept: () => void;
 }
 
 export const DisclaimerModal = ({ onAccept }: DisclaimerModalProps) => {
-  // Check if user has already accepted (initialize state from localStorage)
-  const hasAccepted = localStorage.getItem('disclaimerAccepted') === 'true';
-  const [isOpen, setIsOpen] = useState(!hasAccepted);
+  // Initialize state - check localStorage only once
+  const [isOpen, setIsOpen] = useState(() => {
+    const hasAccepted = localStorage.getItem('disclaimerAccepted') === 'true';
+    return !hasAccepted;
+  });
 
-  // Call onAccept if already accepted
-  if (hasAccepted && isOpen) {
-    onAccept();
-  }
+  // Call onAccept in useEffect if already accepted
+  useEffect(() => {
+    const hasAccepted = localStorage.getItem('disclaimerAccepted') === 'true';
+    if (hasAccepted) {
+      onAccept();
+    }
+  }, [onAccept]);
 
   const handleAccept = () => {
     localStorage.setItem('disclaimerAccepted', 'true');

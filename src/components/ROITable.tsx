@@ -1,5 +1,8 @@
 import { Tooltip } from './Tooltip';
 
+// Estimation prefix for compliance with ACL s18
+const ESTIMATION_PREFIX = '~';
+
 interface ROITableProps {
   results: {
     batSavings: number;
@@ -15,12 +18,12 @@ interface ROITableProps {
 
 export const ROITable = ({ results }: ROITableProps) => {
   const formatCurrency = (amount: number) => {
-    return `~$${amount.toLocaleString('en-US', { minimumFractionDigits: 0, maximumFractionDigits: 0 })}`;
+    return `${ESTIMATION_PREFIX}$${amount.toLocaleString('en-US', { minimumFractionDigits: 0, maximumFractionDigits: 0 })}`;
   };
 
   const formatYears = (years: number) => {
     if (years > 100) return 'N/A';
-    return `~${years.toFixed(1)} years`;
+    return `${ESTIMATION_PREFIX}${years.toFixed(1)} years`;
   };
 
   const strategies = [

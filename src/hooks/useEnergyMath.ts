@@ -158,5 +158,15 @@ export const useEnergyMath = (inputs: EnergyInputs): EnergyResults => {
       roiYears,
       gridPriceWarning,
     };
-  }, [inputs]);
+  }, [
+    inputs.bill,
+    inputs.gasBill,
+    inputs.petrolBill,
+    inputs.solarSize,
+    inputs.batterySize,
+    inputs.isEV,
+    inputs.isV2H,
+    inputs.isHeatPump,
+    inputs.isInduction,
+  ]);
 };
