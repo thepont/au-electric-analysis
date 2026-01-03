@@ -4,14 +4,18 @@ import { InputSliders } from './components/InputSliders';
 import { ROITable } from './components/ROITable';
 import { CostGraph } from './components/CostGraph';
 import { ReferralLinks } from './components/ReferralLinks';
+import { DisclaimerModal } from './components/DisclaimerModal';
 import { Zap } from 'lucide-react';
+import { useState } from 'react';
 
 function App() {
   const [state, updateState] = useHashState();
   const results = useEnergyMath(state);
+  const [hasAcceptedDisclaimer, setHasAcceptedDisclaimer] = useState(false);
 
   return (
     <div className="min-h-screen bg-slate-50">
+      <DisclaimerModal onAccept={() => setHasAcceptedDisclaimer(true)} />
       <div className="max-w-7xl mx-auto px-4 py-8">
         {/* Header */}
         <header className="backdrop-blur-xl bg-white/80 sticky top-0 z-10 -mx-4 px-4 py-6 mb-10 border-b border-slate-200">
@@ -42,38 +46,53 @@ function App() {
           </div>
 
           {/* ROI Leaderboard */}
-          <div className="bg-white rounded-[2.5rem] shadow-sm border border-slate-200 p-8">
-            <h2 className="text-2xl font-semibold text-slate-900 tracking-tighter mb-4 flex items-center">
-              <span className="w-2 h-8 bg-amber-500 rounded mr-3"></span>
-              ROI Leaderboard
-            </h2>
-            <ROITable results={results} />
-          </div>
+          {hasAcceptedDisclaimer && (
+            <div className="bg-white rounded-[2.5rem] shadow-sm border border-slate-200 p-8">
+              <h2 className="text-2xl font-semibold text-slate-900 tracking-tighter mb-4 flex items-center">
+                <span className="w-2 h-8 bg-amber-500 rounded mr-3"></span>
+                ROI Leaderboard
+              </h2>
+              <ROITable results={results} />
+            </div>
+          )}
 
           {/* Cost Graph - The Race */}
-          <div className="bg-white rounded-[2.5rem] shadow-sm border border-slate-200 p-8">
-            <h2 className="text-2xl font-semibold text-slate-900 tracking-tighter mb-2 flex items-center">
-              <span className="w-2 h-8 bg-slate-900 rounded mr-3"></span>
-              15-Year Cost Race
-            </h2>
-            <p className="text-sm text-slate-400 mb-4 uppercase tracking-widest">
-              Watch the crossover point where your investment pays off
-            </p>
-            <CostGraph results={results} />
-          </div>
+          {hasAcceptedDisclaimer && (
+            <div className="bg-white rounded-[2.5rem] shadow-sm border border-slate-200 p-8">
+              <h2 className="text-2xl font-semibold text-slate-900 tracking-tighter mb-2 flex items-center">
+                <span className="w-2 h-8 bg-slate-900 rounded mr-3"></span>
+                15-Year Cost Race
+              </h2>
+              <p className="text-sm text-slate-400 mb-4 uppercase tracking-widest">
+                Watch the crossover point where your investment pays off
+              </p>
+              <CostGraph results={results} />
+            </div>
+          )}
 
           {/* Referral Links */}
           <ReferralLinks />
         </div>
 
         {/* Footer */}
-        <footer className="text-center mt-10 text-slate-400 text-sm">
-          <p className="mb-2">
-            Built with Vite + React + Tailwind + Recharts
-          </p>
-          <p className="text-xs text-slate-400 uppercase tracking-widest">
-            Share your scenario via URL • All calculations run locally in browser
-          </p>
+        <footer className="mt-10 text-slate-400">
+          {/* Mandatory Disclaimer */}
+          <div className="bg-white rounded-[2.5rem] shadow-sm border border-slate-200 p-6 mb-4">
+            <p className="text-sm text-center text-slate-900">
+              <strong>⚖️ Legal Disclaimer:</strong> Calculations based on AEMO 2024 ISP 'Step Change' scenario 
+              and CSIRO GenCost 2024-25. Actual savings will vary based on weather, usage patterns, and tariff changes. 
+              All figures are estimates and should not be considered financial advice.
+            </p>
+          </div>
+          
+          <div className="text-center text-sm">
+            <p className="mb-2">
+              Built with Vite + React + Tailwind + Recharts
+            </p>
+            <p className="text-xs text-slate-400 uppercase tracking-widest">
+              Share your scenario via URL • All calculations run locally in browser
+            </p>
+          </div>
         </footer>
       </div>
     </div>

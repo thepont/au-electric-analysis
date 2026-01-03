@@ -19,8 +19,12 @@ export const CostGraph = ({ results }: CostGraphProps) => {
   };
 
   return (
-    <div className="w-full h-96">
-      <ResponsiveContainer width="100%" height="100%">
+    <div className="w-full">
+      <div className="mb-2 text-xs text-slate-600 bg-slate-50 p-2 rounded">
+        * Estimates based on 3% inflation and AEMO 2024 ISP projections. Hover over chart for details.
+      </div>
+      <div className="h-96">
+        <ResponsiveContainer width="100%" height="100%">
         <AreaChart
           data={data}
           margin={{ top: 10, right: 30, left: 0, bottom: 0 }}
@@ -47,8 +51,9 @@ export const CostGraph = ({ results }: CostGraphProps) => {
             stroke="#6b7280"
           />
           <Tooltip 
-            formatter={(value: number | undefined) => value ? `$${value.toLocaleString()}` : '$0'}
+            formatter={(value: number | undefined) => value ? `~$${value.toLocaleString()}` : '~$0'}
             contentStyle={{ backgroundColor: '#1f2937', border: 'none', borderRadius: '0.5rem', color: '#fff' }}
+            labelFormatter={(label) => `Year ${label}`}
           />
           <Legend />
           <Area
@@ -71,6 +76,7 @@ export const CostGraph = ({ results }: CostGraphProps) => {
           />
         </AreaChart>
       </ResponsiveContainer>
+      </div>
     </div>
   );
 };
