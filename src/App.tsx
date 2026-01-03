@@ -4,14 +4,18 @@ import { InputSliders } from './components/InputSliders';
 import { ROITable } from './components/ROITable';
 import { CostGraph } from './components/CostGraph';
 import { ReferralLinks } from './components/ReferralLinks';
+import { DisclaimerModal } from './components/DisclaimerModal';
 import { Zap } from 'lucide-react';
+import { useState } from 'react';
 
 function App() {
   const [state, updateState] = useHashState();
   const results = useEnergyMath(state);
+  const [hasAcceptedDisclaimer, setHasAcceptedDisclaimer] = useState(false);
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-emerald-900">
+      <DisclaimerModal onAccept={() => setHasAcceptedDisclaimer(true)} />
       <div className="max-w-7xl mx-auto px-4 py-8">
         {/* Header */}
         <header className="text-center mb-10">
@@ -40,38 +44,53 @@ function App() {
           </div>
 
           {/* ROI Leaderboard */}
-          <div className="bg-white rounded-xl shadow-2xl p-6">
-            <h2 className="text-2xl font-semibold text-slate-800 mb-4 flex items-center">
-              <span className="w-2 h-8 bg-amber-500 rounded mr-3"></span>
-              ROI Leaderboard
-            </h2>
-            <ROITable results={results} />
-          </div>
+          {hasAcceptedDisclaimer && (
+            <div className="bg-white rounded-xl shadow-2xl p-6">
+              <h2 className="text-2xl font-semibold text-slate-800 mb-4 flex items-center">
+                <span className="w-2 h-8 bg-amber-500 rounded mr-3"></span>
+                ROI Leaderboard
+              </h2>
+              <ROITable results={results} />
+            </div>
+          )}
 
           {/* Cost Graph - The Race */}
-          <div className="bg-white rounded-xl shadow-2xl p-6">
-            <h2 className="text-2xl font-semibold text-slate-800 mb-2 flex items-center">
-              <span className="w-2 h-8 bg-blue-500 rounded mr-3"></span>
-              15-Year Cost Race
-            </h2>
-            <p className="text-sm text-slate-600 mb-4">
-              Watch the crossover point where your investment pays off
-            </p>
-            <CostGraph results={results} />
-          </div>
+          {hasAcceptedDisclaimer && (
+            <div className="bg-white rounded-xl shadow-2xl p-6">
+              <h2 className="text-2xl font-semibold text-slate-800 mb-2 flex items-center">
+                <span className="w-2 h-8 bg-blue-500 rounded mr-3"></span>
+                15-Year Cost Race
+              </h2>
+              <p className="text-sm text-slate-600 mb-4">
+                Watch the crossover point where your investment pays off
+              </p>
+              <CostGraph results={results} />
+            </div>
+          )}
 
           {/* Referral Links */}
           <ReferralLinks />
         </div>
 
         {/* Footer */}
-        <footer className="text-center mt-10 text-slate-400 text-sm">
-          <p className="mb-2">
-            Built with Vite + React + Tailwind + Recharts
-          </p>
-          <p className="text-xs text-slate-500">
-            Share your scenario via URL • All calculations run locally in browser
-          </p>
+        <footer className="mt-10 text-slate-300">
+          {/* Mandatory Disclaimer */}
+          <div className="bg-slate-800 rounded-lg p-4 mb-4 border border-slate-700">
+            <p className="text-sm text-center">
+              <strong>⚖️ Legal Disclaimer:</strong> Calculations based on AEMO 2024 ISP 'Step Change' scenario 
+              and CSIRO GenCost 2024-25. Actual savings will vary based on weather, usage patterns, and tariff changes. 
+              All figures are estimates and should not be considered financial advice.
+            </p>
+          </div>
+          
+          <div className="text-center text-sm">
+            <p className="mb-2">
+              Built with Vite + React + Tailwind + Recharts
+            </p>
+            <p className="text-xs text-slate-500">
+              Share your scenario via URL • All calculations run locally in browser
+            </p>
+          </div>
         </footer>
       </div>
     </div>

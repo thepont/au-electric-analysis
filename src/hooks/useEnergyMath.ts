@@ -33,6 +33,7 @@ interface EnergyResults {
   hackedCosts: number[];
   systemCost: number;
   roiYears: number;
+  gridPriceWarning?: string;
 }
 
 export const useEnergyMath = (inputs: EnergyInputs): EnergyResults => {
@@ -48,6 +49,13 @@ export const useEnergyMath = (inputs: EnergyInputs): EnergyResults => {
       isHeatPump, 
       isInduction 
     } = inputs;
+    
+    // Validate grid price against realistic bounds (ACL s18 compliance)
+    let gridPriceWarning: string | undefined;
+    const impliedGridPrice = (PEAK_RATE + OFF_PEAK) / 2; // Average rate
+    if (impliedGridPrice > 1.00 || impliedGridPrice < 0.15) {
+      gridPriceWarning = "This rate deviates significantly from Australian averages.";
+    }
     
     // Baseline Usage Calculation
     const dailyTotalKwh = bill / 365 / ((PEAK_RATE + OFF_PEAK) / 2);
@@ -148,6 +156,7 @@ export const useEnergyMath = (inputs: EnergyInputs): EnergyResults => {
       hackedCosts,
       systemCost,
       roiYears,
+      gridPriceWarning,
     };
   }, [
     inputs.bill,
