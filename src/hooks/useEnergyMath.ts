@@ -145,6 +145,8 @@ export const useEnergyMath = (inputs: EnergyInputs): EnergyResults => {
     const dailyShift = Math.min(usableCapacity, dailyPeakNeed);
     
     // Adjust battery savings for wasted kWh due to fuse constraint
+    // The wastedValue represents the annual cost of energy we can't import due to fuse limits
+    // We scale it proportionally to the battery savings calculation
     const wastedValue = requestedImportKwh > 0 
       ? (wastedKwh * (PEAK_RATE - FREE_WINDOW) * 365 / requestedImportKwh)
       : 0;
