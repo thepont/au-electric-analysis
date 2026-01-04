@@ -44,10 +44,10 @@ export const ApplianceConfiguration = ({ state, updateState }: ApplianceConfigur
         </div>
         
         <div className="grid md:grid-cols-2 gap-4">
-          {/* What do you have now? */}
+          {/* What do you have now? & Plan to upgrade? combined */}
           <div>
             <label className="block text-xs font-medium text-slate-600 mb-2 uppercase tracking-wider">
-              What do you have now?
+              What do you have now? / Plan to upgrade?
             </label>
             <div className="space-y-2">
               <div className="flex items-center space-x-2">
@@ -61,6 +61,7 @@ export const ApplianceConfiguration = ({ state, updateState }: ApplianceConfigur
                   className="w-24 px-3 py-2 border border-gray-300 rounded-md text-sm focus:ring-2 focus:ring-amber-500 focus:border-transparent"
                 />
                 <span className="text-sm text-gray-600">kW</span>
+                <span className="text-xs text-gray-500 ml-2">(ROI table shows upgrade options)</span>
               </div>
               <input
                 type="range"
@@ -73,17 +74,6 @@ export const ApplianceConfiguration = ({ state, updateState }: ApplianceConfigur
               />
             </div>
           </div>
-
-          {/* Do you plan to upgrade? */}
-          <div>
-            <label className="block text-xs font-medium text-slate-600 mb-2 uppercase tracking-wider">
-              Plan to upgrade?
-            </label>
-            <div className="text-sm text-gray-600 px-4 py-2 bg-white border border-gray-300 rounded-lg">
-              Configure size on left →
-            </div>
-            <p className="text-xs text-gray-500 mt-1">Solar upgrades calculated in ROI table</p>
-          </div>
         </div>
       </div>
 
@@ -94,15 +84,18 @@ export const ApplianceConfiguration = ({ state, updateState }: ApplianceConfigur
           <h4 className="font-semibold text-slate-900">Battery Storage</h4>
         </div>
         
-        <div className="grid md:grid-cols-3 gap-4">
-          {/* What do you have now? */}
+        <div className="grid md:grid-cols-2 gap-4">
+          {/* What do you have now? & Plan to upgrade? combined */}
           <div>
             <label className="block text-xs font-medium text-slate-600 mb-2 uppercase tracking-wider">
-              What do you have now?
+              What do you have now? / Plan to add more?
             </label>
             {state.isV2H ? (
-              <div className="text-sm text-gray-600 px-4 py-2 bg-white border border-gray-300 rounded-lg">
-                Using V2H (60 kWh)
+              <div>
+                <div className="text-sm text-gray-600 px-4 py-2 bg-white border border-gray-300 rounded-lg">
+                  Using V2H (60 kWh)
+                </div>
+                <p className="text-xs text-gray-500 mt-1">V2H provides battery storage</p>
               </div>
             ) : (
               <div className="space-y-2">
@@ -117,6 +110,12 @@ export const ApplianceConfiguration = ({ state, updateState }: ApplianceConfigur
                     className="w-24 px-3 py-2 border border-gray-300 rounded-md text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                   />
                   <span className="text-sm text-gray-600">kWh</span>
+                  {state.batterySize === 0 && (
+                    <span className="text-xs text-amber-600">← Set to add battery</span>
+                  )}
+                  {state.batterySize > 0 && (
+                    <span className="text-xs text-gray-500">(ROI table shows options)</span>
+                  )}
                 </div>
                 <input
                   type="range"
@@ -129,19 +128,6 @@ export const ApplianceConfiguration = ({ state, updateState }: ApplianceConfigur
                 />
               </div>
             )}
-            {state.isV2H && (
-              <p className="text-xs text-gray-500 mt-1">V2H provides battery storage</p>
-            )}
-          </div>
-
-          {/* Do you plan to upgrade? */}
-          <div>
-            <label className="block text-xs font-medium text-slate-600 mb-2 uppercase tracking-wider">
-              Plan to upgrade?
-            </label>
-            <div className="text-sm text-gray-600 px-4 py-2 bg-white border border-gray-300 rounded-lg">
-              Calculated in ROI table
-            </div>
           </div>
 
           {/* Do you plan to shift the load? */}
