@@ -23,6 +23,14 @@ interface ROITableProps {
       cooking: number;
       pool: number;
     };
+    // Waterfall breakdown
+    manualShiftSavings: number;
+    batteryArbitrageSavings: number;
+    // Gas breakdown
+    hotWaterSavings: number;
+    heatingSavings: number;
+    cookingSavings: number;
+    gasDisconnectionBonus: number;
   };
 }
 
@@ -37,13 +45,25 @@ export const ROITable = ({ results }: ROITableProps) => {
   };
 
   const strategies = [
+    // OVO Free 3 Plan - Manual Shifts (Timer Hacks)
     {
-      name: 'OVO Free 3 Plan',
+      name: 'OVO Free 3 - Load Shifting',
       cost: 0,
       liability: 0,
-      saving: results.batSavings,
-      link: 'https://www.ovoenergy.com.au/refer/paul8789',
+      saving: results.manualShiftSavings,
+      link: results.manualShiftSavings > 0 ? 'https://www.ovoenergy.com.au/refer/paul8789' : null,
       color: 'emerald',
+      description: 'Pool pump & hot water timers during free window (11am-2pm)',
+    },
+    // OVO Free 3 Plan - Battery Arbitrage
+    {
+      name: 'OVO Free 3 - Battery Arbitrage',
+      cost: 0,
+      liability: 0,
+      saving: results.batteryArbitrageSavings,
+      link: results.batteryArbitrageSavings > 0 ? 'https://www.ovoenergy.com.au/refer/paul8789' : null,
+      color: 'emerald',
+      description: 'Battery discharge during peak (4pm-9pm), charge during free window',
     },
     {
       name: 'Solar System',
@@ -61,13 +81,42 @@ export const ROITable = ({ results }: ROITableProps) => {
       link: 'https://ts.la/paul511330',
       color: 'blue',
     },
+    // Gas Conversion - Hot Water
     {
-      name: 'Gas Conversion',
-      cost: results.gasSavings > 0 ? 5500 : 0,
-      liability: results.liabilityCosts.hotWater + results.liabilityCosts.heating + results.liabilityCosts.cooking,
-      saving: results.gasSavings,
+      name: 'Heat Pump Hot Water',
+      cost: results.hotWaterSavings > 0 ? 3500 : 0,
+      liability: results.liabilityCosts.hotWater,
+      saving: results.hotWaterSavings,
       link: null,
       color: 'orange',
+    },
+    // Gas Conversion - Heating
+    {
+      name: 'Reverse Cycle Heating',
+      cost: results.heatingSavings > 0 ? 0 : 0, // Usually part of existing AC
+      liability: results.liabilityCosts.heating,
+      saving: results.heatingSavings,
+      link: null,
+      color: 'orange',
+    },
+    // Gas Conversion - Cooking
+    {
+      name: 'Induction Cooktop',
+      cost: results.cookingSavings > 0 ? 2000 : 0,
+      liability: results.liabilityCosts.cooking,
+      saving: results.cookingSavings,
+      link: null,
+      color: 'orange',
+    },
+    // Gas Disconnection Bonus
+    {
+      name: 'Gas Supply Elimination',
+      cost: 0,
+      liability: 0,
+      saving: results.gasDisconnectionBonus,
+      link: null,
+      color: 'orange',
+      description: 'Annual supply charge savings after removing all gas appliances',
     },
     {
       name: 'Variable Speed Pool Pump',
@@ -93,7 +142,7 @@ export const ROITable = ({ results }: ROITableProps) => {
       link: null,
       color: 'teal',
     },
-  ].filter(s => s.saving > 0 || s.name === 'OVO Free 3 Plan');
+  ].filter(s => s.saving > 0);
 
   return (
     <div className="overflow-x-auto">
