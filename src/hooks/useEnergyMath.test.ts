@@ -2,6 +2,13 @@ import { describe, it, expect } from 'vitest';
 import { renderHook } from '@testing-library/react';
 import { useEnergyMath } from './useEnergyMath';
 
+const DEFAULT_CURRENT_SETUP = {
+  hotWater: 'gas' as const,
+  heating: 'gas' as const,
+  cooking: 'gas' as const,
+  pool: 'none' as const,
+};
+
 describe('useEnergyMath', () => {
   describe('Grid Export Limit (DNSP Clipping)', () => {
     it('should calculate lower savings with 5kW export limit vs unlimited for a Super System (17kW solar)', () => {
@@ -28,6 +35,7 @@ describe('useEnergyMath', () => {
           runPoolInWindow: false,
           runHotWaterInWindow: false,
         },
+        currentSetup: DEFAULT_CURRENT_SETUP,
       };
 
       // Test with 5kW export limit (Single Phase Standard)
@@ -81,6 +89,7 @@ describe('useEnergyMath', () => {
           runPoolInWindow: false,
           runHotWaterInWindow: false,
         },
+        currentSetup: DEFAULT_CURRENT_SETUP,
       };
 
       const { result } = renderHook(() => useEnergyMath(inputs));
@@ -113,6 +122,7 @@ describe('useEnergyMath', () => {
           runPoolInWindow: false,
           runHotWaterInWindow: false,
         },
+        currentSetup: DEFAULT_CURRENT_SETUP,
       };
 
       const { result } = renderHook(() => useEnergyMath(inputs));
@@ -154,6 +164,7 @@ describe('useEnergyMath', () => {
           runPoolInWindow: false,
           runHotWaterInWindow: false,
         },
+        currentSetup: DEFAULT_CURRENT_SETUP,
       };
 
       const { result: tenKwResult } = renderHook(() => useEnergyMath(inputs));
@@ -196,6 +207,7 @@ describe('useEnergyMath', () => {
           runPoolInWindow: false,
           runHotWaterInWindow: false,
         },
+        currentSetup: DEFAULT_CURRENT_SETUP,
       };
 
       const { result } = renderHook(() => useEnergyMath(inputs));
@@ -238,6 +250,7 @@ describe('useEnergyMath', () => {
           runPoolInWindow: false,
           runHotWaterInWindow: false,
         },
+        currentSetup: DEFAULT_CURRENT_SETUP,
       };
 
       const { result } = renderHook(() => useEnergyMath(inputs));
@@ -274,6 +287,7 @@ describe('useEnergyMath', () => {
           runPoolInWindow: false,
           runHotWaterInWindow: false,
         },
+        currentSetup: DEFAULT_CURRENT_SETUP,
       };
 
       const { result } = renderHook(() => useEnergyMath(inputs));
@@ -306,6 +320,7 @@ describe('useEnergyMath', () => {
           runPoolInWindow: true,   // 1.5 kW
           runHotWaterInWindow: true, // 1.0 kW
         },
+        currentSetup: DEFAULT_CURRENT_SETUP,
       };
 
       const { result } = renderHook(() => useEnergyMath(inputs));
@@ -341,6 +356,7 @@ describe('useEnergyMath', () => {
           runPoolInWindow: false,
           runHotWaterInWindow: false,
         },
+        currentSetup: DEFAULT_CURRENT_SETUP,
       };
 
       const { result } = renderHook(() => useEnergyMath(inputs));
@@ -376,6 +392,7 @@ describe('useEnergyMath', () => {
           runPoolInWindow: true,   // 4.5 kWh requested (1.5kW * 3h)
           runHotWaterInWindow: true, // 3 kWh requested (1kW * 3h)
         },
+        currentSetup: DEFAULT_CURRENT_SETUP,
       };
 
       const { result } = renderHook(() => useEnergyMath(inputs));
@@ -414,6 +431,7 @@ describe('useEnergyMath', () => {
           runPoolInWindow: true,   // 4.5 kWh requested
           runHotWaterInWindow: true, // 3 kWh requested
         },
+        currentSetup: DEFAULT_CURRENT_SETUP,
       };
 
       const { result } = renderHook(() => useEnergyMath(inputs));

@@ -23,6 +23,13 @@ interface EnergyState {
     runPoolInWindow: boolean;
     runHotWaterInWindow: boolean;
   };
+  // v15 Retrofit Logic: Current Setup State
+  currentSetup: {
+    hotWater: 'gas' | 'resistive' | 'heatpump';
+    heating: 'gas' | 'resistive' | 'rc' | 'none';
+    cooking: 'gas' | 'induction';
+    pool: 'none' | 'single_speed' | 'variable_speed';
+  };
 }
 
 const DEFAULT_STATE: EnergyState = {
@@ -47,6 +54,12 @@ const DEFAULT_STATE: EnergyState = {
     chargeBatInWindow: false,
     runPoolInWindow: false,
     runHotWaterInWindow: false,
+  },
+  currentSetup: {
+    hotWater: 'gas',
+    heating: 'gas',
+    cooking: 'gas',
+    pool: 'none',
   },
 };
 
@@ -76,6 +89,12 @@ const parseHash = (hash: string): EnergyState => {
       runPoolInWindow: params.get('poolWindow') === 'true',
       runHotWaterInWindow: params.get('hwWindow') === 'true',
     },
+    currentSetup: {
+      hotWater: (params.get('currentHW') || DEFAULT_STATE.currentSetup.hotWater) as 'gas' | 'resistive' | 'heatpump',
+      heating: (params.get('currentHeating') || DEFAULT_STATE.currentSetup.heating) as 'gas' | 'resistive' | 'rc' | 'none',
+      cooking: (params.get('currentCooking') || DEFAULT_STATE.currentSetup.cooking) as 'gas' | 'induction',
+      pool: (params.get('currentPool') || DEFAULT_STATE.currentSetup.pool) as 'none' | 'single_speed' | 'variable_speed',
+    },
   };
 };
 
@@ -102,6 +121,10 @@ const serializeHash = (state: EnergyState): string => {
   params.set('batWindow', String(state.strategies.chargeBatInWindow));
   params.set('poolWindow', String(state.strategies.runPoolInWindow));
   params.set('hwWindow', String(state.strategies.runHotWaterInWindow));
+  params.set('currentHW', state.currentSetup.hotWater);
+  params.set('currentHeating', state.currentSetup.heating);
+  params.set('currentCooking', state.currentSetup.cooking);
+  params.set('currentPool', state.currentSetup.pool);
   return `#${params.toString()}`;
 };
 

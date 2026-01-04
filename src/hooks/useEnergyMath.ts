@@ -34,6 +34,12 @@ interface EnergyInputs {
     runPoolInWindow: boolean;
     runHotWaterInWindow: boolean;
   };
+  currentSetup: {
+    hotWater: 'gas' | 'resistive' | 'heatpump';
+    heating: 'gas' | 'resistive' | 'rc' | 'none';
+    cooking: 'gas' | 'induction';
+    pool: 'none' | 'single_speed' | 'variable_speed';
+  };
 }
 
 interface ApplianceAssumption {
@@ -64,6 +70,13 @@ interface EnergyResults {
   wastedKwh: number;
   actualImportKwh: number;
   requestedImportKwh: number;
+  gasDisconnected: boolean;
+  liabilityCosts: {
+    hotWater: number;
+    heating: number;
+    cooking: number;
+    pool: number;
+  };
 }
 
 export const useEnergyMath = (inputs: EnergyInputs): EnergyResults => {
@@ -85,7 +98,8 @@ export const useEnergyMath = (inputs: EnergyInputs): EnergyResults => {
       hasOldDryer,
       gridExportLimit,
       serviceFuse,
-      strategies
+      strategies,
+      currentSetup
     } = inputs;
     
     // Build assumptions array based on current setup
@@ -143,20 +157,164 @@ export const useEnergyMath = (inputs: EnergyInputs): EnergyResults => {
     
     // Baseline Usage Calculation
     const dailyTotalKwh = bill / 365 / ((PEAK_RATE + OFF_PEAK) / 2);
-    let adjustedDailyKwh = dailyTotalKwh;
     
-    // Appliance Shift (Gas -> Elec)
-    let gasElecShift = 0;
-    if (isHeatPump && hasGasWater) {
-      gasElecShift += (gasBill * 0.35) / 4.0; // COP 4.0
-    }
-    if (isInduction && hasGasCooking) {
-      gasElecShift += (gasBill * 0.15) / 2.0;
-    }
-    adjustedDailyKwh += gasElecShift / 365;
+    // === v15 RETROFIT LOGIC: Differential Calculations ===
     
-    const dailyPeakNeed = adjustedDailyKwh * 0.45; // 45% of usage is in expensive window
+    // Calculate 10-Year Liability Costs (Cost to Keep Current System)
+    const INFLATION_RATE = 1.03;
+    const calculateTenYearLiability = (annualCost: number): number => {
+      let total = 0;
+      for (let year = 1; year <= 10; year++) {
+        total += annualCost * Math.pow(INFLATION_RATE, year);
+      }
+      return total;
+    };
 
+    // Hot Water Savings (Differential Logic)
+    let hotWaterSavings = 0;
+    let hotWaterLiability = 0;
+    
+    if (isHeatPump && currentSetup.hotWater !== 'heatpump') {
+      if (currentSetup.hotWater === 'gas') {
+        // Replacing Gas Hot Water with Heat Pump
+        const gasHotWaterCost = gasBill * 0.35; // 35% of gas bill
+        hotWaterLiability = calculateTenYearLiability(gasHotWaterCost);
+        
+        // Gas MJ conversion: Typical gas hot water uses ~10 GJ/year
+        // Converting to electric with COP 4.0: 10 GJ = 10,000 MJ / 3.6 = 2,778 kWh thermal
+        // With COP 4.0: 2,778 / 4.0 = 694.5 kWh electric
+        const gasEnergyMJ = (gasHotWaterCost / (gasBill || 1)) * gasBill * 40; // Approx MJ from gas cost
+        const newElecKwh = (gasEnergyMJ / 3.6) / 4.0; // MJ to kWh, then apply COP
+        const newElecCost = newElecKwh * OFF_PEAK;
+        hotWaterSavings = gasHotWaterCost - newElecCost;
+      } else if (currentSetup.hotWater === 'resistive') {
+        // Replacing Resistive Hot Water with Heat Pump
+        // Typical resistive: 3600 kWh/year
+        const resistiveKwh = 3600;
+        const resistiveCost = resistiveKwh * OFF_PEAK;
+        hotWaterLiability = calculateTenYearLiability(resistiveCost);
+        
+        // Heat pump saves 75% of energy (COP 4.0 means 1/4 the energy)
+        hotWaterSavings = resistiveCost * 0.75;
+      }
+    }
+
+    // Heating Savings (Differential Logic)
+    let heatingSavings = 0;
+    let heatingLiability = 0;
+    
+    // Check if we're upgrading heating (RC = Reverse Cycle)
+    const isUpgradingHeating = currentSetup.heating !== 'rc' && currentSetup.heating !== 'none';
+    
+    if (isUpgradingHeating) {
+      if (currentSetup.heating === 'gas') {
+        // Replacing Gas Heating with Reverse Cycle
+        const gasHeatingCost = gasBill * 0.55; // 55% of gas bill for heating
+        heatingLiability = calculateTenYearLiability(gasHeatingCost);
+        
+        // Gas heating to RC with COP 4.5
+        const gasEnergyMJ = (gasHeatingCost / (gasBill || 1)) * gasBill * 40;
+        const newElecKwh = (gasEnergyMJ / 3.6) / 4.5; // Apply COP 4.5
+        const newElecCost = newElecKwh * OFF_PEAK;
+        heatingSavings = gasHeatingCost - newElecCost;
+      } else if (currentSetup.heating === 'resistive') {
+        // Replacing Resistive Heating with Reverse Cycle
+        // Typical resistive heating: 2000 kWh/year
+        const resistiveKwh = 2000;
+        const resistiveCost = resistiveKwh * OFF_PEAK;
+        heatingLiability = calculateTenYearLiability(resistiveCost);
+        
+        // RC with COP 4.5 saves ~78% (1/4.5 = 0.22, so saves 0.78)
+        heatingSavings = resistiveCost * 0.78;
+      }
+    }
+
+    // Cooking Savings (Differential Logic)
+    let cookingSavings = 0;
+    let cookingLiability = 0;
+    
+    if (isInduction && currentSetup.cooking === 'gas') {
+      // Replacing Gas Cooking with Induction
+      const gasCookingCost = gasBill * 0.15; // 15% of gas bill
+      cookingLiability = calculateTenYearLiability(gasCookingCost);
+      
+      // Induction is about 2x as efficient as gas
+      const newElecCost = (gasCookingCost / 2.0) * (OFF_PEAK / 0.41); // Adjusted for typical rate
+      cookingSavings = gasCookingCost - newElecCost;
+    }
+
+    // Pool Savings (Three Options Logic)
+    let poolSavings = 0;
+    let poolLiability = 0;
+    
+    if (currentSetup.pool !== 'none') {
+      if (currentSetup.pool === 'single_speed') {
+        // Single Speed Pump baseline cost
+        const singleSpeedKwh = 1.5 * 8 * 365; // 1.5kW * 8h/day * 365 days = 4,380 kWh
+        const singleSpeedCost = singleSpeedKwh * OFF_PEAK;
+        poolLiability = calculateTenYearLiability(singleSpeedCost);
+        
+        // Check if user wants to run pool in free window (Timer Hack)
+        if (strategies.runPoolInWindow) {
+          // Timer Hack: Run during OVO Free Window = $0 cost
+          poolSavings = singleSpeedCost; // Save 100%
+        } else {
+          // Variable Speed Pump upgrade
+          const vspKwh = 0.2 * 10 * 365; // 200W * 10h/day * 365 days = 730 kWh
+          const vspCost = vspKwh * OFF_PEAK;
+          poolSavings = singleSpeedCost - vspCost;
+        }
+      } else if (currentSetup.pool === 'variable_speed') {
+        // Already have VSP - check if can do timer hack
+        const vspKwh = 0.2 * 10 * 365;
+        const vspCost = vspKwh * OFF_PEAK;
+        poolLiability = calculateTenYearLiability(vspCost);
+        
+        if (strategies.runPoolInWindow) {
+          // Can't use timer hack with VSP (VSP is already optimal)
+          poolSavings = 0;
+        }
+      }
+    }
+
+    // Gas Disconnection Bonus
+    let gasDisconnectionBonus = 0;
+    let gasDisconnected = false;
+    
+    // Check if user STARTED with gas (gasBill > 0)
+    if (gasBill > 0) {
+      // Track remaining gas appliances after upgrades
+      const hasGasAfterUpgrades = 
+        (currentSetup.hotWater === 'gas' && !isHeatPump) ||
+        (currentSetup.heating === 'gas' && !isUpgradingHeating) ||
+        (currentSetup.cooking === 'gas' && !isInduction);
+      
+      // If NO gas appliances remain, add supply charge savings
+      if (!hasGasAfterUpgrades) {
+        gasDisconnectionBonus = GAS_SUPPLY_CHARGE;
+        gasDisconnected = true;
+      }
+    }
+
+    // Total Gas-Related Savings
+    const gasSavings = hotWaterSavings + heatingSavings + cookingSavings + gasDisconnectionBonus;
+
+    // Appliance Shift (Gas -> Elec) for load calculation
+    let gasElecShift = 0;
+    if (isHeatPump && currentSetup.hotWater === 'gas') {
+      const gasHotWaterCost = gasBill * 0.35;
+      const gasEnergyMJ = (gasHotWaterCost / (gasBill || 1)) * gasBill * 40;
+      gasElecShift += (gasEnergyMJ / 3.6) / 4.0 / 365; // Daily kWh
+    }
+    if (isInduction && currentSetup.cooking === 'gas') {
+      const gasCookingCost = gasBill * 0.15;
+      const gasEnergyMJ = (gasCookingCost / (gasBill || 1)) * gasBill * 40;
+      gasElecShift += (gasEnergyMJ / 3.6) / 2.0 / 365; // Daily kWh
+    }
+    
+    const adjustedDailyKwh = dailyTotalKwh + gasElecShift;
+    const dailyPeakNeed = adjustedDailyKwh * 0.45; // 45% of usage is in expensive window
+    
     // Service Fuse Constraint Calculations
     // Calculate Max Grid Draw (kW)
     const maxKw = serviceFuse === 100 
@@ -263,47 +421,14 @@ export const useEnergyMath = (inputs: EnergyInputs): EnergyResults => {
       transportSavings = legacyTransport - newTransport;
     }
 
-    // Gas Savings
-    let gasSavings = 0;
-    if (isHeatPump || isInduction) {
-      // Savings from converting gas appliances
-      let heatPumpSavings = 0;
-      if (isHeatPump && hasGasWater) {
-        const heatPumpGasUsage = gasBill * 0.35; // 35% of gas bill is hot water
-        const heatPumpElecCost = (heatPumpGasUsage / 4.0) * OFF_PEAK; // COP 4.0, charged at off-peak
-        heatPumpSavings = heatPumpGasUsage - heatPumpElecCost;
-      }
-      
-      let inductionSavings = 0;
-      if (isInduction && hasGasCooking) {
-        const inductionGasUsage = gasBill * 0.15; // 15% of gas bill is cooking
-        const inductionElecCost = (inductionGasUsage / 2.0) * OFF_PEAK; // 50% efficiency, charged at off-peak
-        inductionSavings = inductionGasUsage - inductionElecCost;
-      }
-      
-      gasSavings = heatPumpSavings + inductionSavings;
-      
-      // If all gas appliances are gone (either never had them or replacing them), add supply charge savings
-      const noGasHeating = !hasGasHeating;
-      const noGasWater = !hasGasWater || isHeatPump;
-      const noGasCooking = !hasGasCooking || isInduction;
-      
-      if (noGasHeating && noGasWater && noGasCooking) {
-        gasSavings += GAS_SUPPLY_CHARGE;
-      }
-    }
-
-    // New Upgrade Savings
-    // Pool Pump: Variable speed pump saves ~$900/yr if pool exists
-    const poolPumpSavings = hasPool ? 900 : 0;
-    
+    // Other Upgrade Savings (Keep existing logic)
     // Heat Pump Dryer: Saves ~$200/yr if old dryer exists
     const hpDryerSavings = hasOldDryer ? 200 : 0;
     
     // Gap Sealing: Saves 15% of heating bill
     const gapSealingSavings = hasGasHeating ? gasBill * 0.50 * 0.15 : 0;
 
-    const totalSavings = batSavings + solarSavings + transportSavings + gasSavings + poolPumpSavings + hpDryerSavings + gapSealingSavings;
+    const totalSavings = batSavings + solarSavings + transportSavings + gasSavings + poolSavings + hpDryerSavings + gapSealingSavings;
 
     // Calculate system costs
     const solarCost = solarSize * 1000;
@@ -335,7 +460,7 @@ export const useEnergyMath = (inputs: EnergyInputs): EnergyResults => {
       solarSavings,
       transportSavings,
       gasSavings,
-      poolPumpSavings,
+      poolPumpSavings: poolSavings,
       hpDryerSavings,
       gapSealingSavings,
       totalSavings,
@@ -352,6 +477,13 @@ export const useEnergyMath = (inputs: EnergyInputs): EnergyResults => {
       wastedKwh,
       actualImportKwh,
       requestedImportKwh,
+      gasDisconnected,
+      liabilityCosts: {
+        hotWater: hotWaterLiability,
+        heating: heatingLiability,
+        cooking: cookingLiability,
+        pool: poolLiability,
+      },
     };
   }, [
     inputs.bill,
@@ -374,5 +506,9 @@ export const useEnergyMath = (inputs: EnergyInputs): EnergyResults => {
     inputs.strategies.chargeBatInWindow,
     inputs.strategies.runPoolInWindow,
     inputs.strategies.runHotWaterInWindow,
+    inputs.currentSetup.hotWater,
+    inputs.currentSetup.heating,
+    inputs.currentSetup.cooking,
+    inputs.currentSetup.pool,
   ]);
 };
