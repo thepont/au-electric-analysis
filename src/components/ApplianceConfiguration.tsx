@@ -43,7 +43,7 @@ export const ApplianceConfiguration = ({ state, updateState }: ApplianceConfigur
           <h4 className="font-semibold text-slate-900">Solar System</h4>
         </div>
         
-        <div className="grid md:grid-cols-2 gap-4">
+        <div>
           {/* Current or Planned Size */}
           <div>
             <label className="block text-xs font-medium text-slate-600 mb-2 uppercase tracking-wider">
@@ -76,16 +76,6 @@ export const ApplianceConfiguration = ({ state, updateState }: ApplianceConfigur
               />
             </div>
           </div>
-          
-          {/* Upgrade Info */}
-          <div>
-            <label className="block text-xs font-medium text-slate-600 mb-2 uppercase tracking-wider">
-              Further Upgrades
-            </label>
-            <div className="text-sm text-gray-600 px-4 py-3 bg-white border border-gray-300 rounded-lg">
-              See ROI table below for upgrade options
-            </div>
-          </div>
         </div>
       </div>
 
@@ -96,7 +86,7 @@ export const ApplianceConfiguration = ({ state, updateState }: ApplianceConfigur
           <h4 className="font-semibold text-slate-900">Battery Storage</h4>
         </div>
         
-        <div className="grid md:grid-cols-3 gap-4">
+        <div className="grid md:grid-cols-2 gap-4">
           {/* Current or Planned Capacity */}
           <div>
             <label className="block text-xs font-medium text-slate-600 mb-2 uppercase tracking-wider">
@@ -137,16 +127,6 @@ export const ApplianceConfiguration = ({ state, updateState }: ApplianceConfigur
                 />
               </div>
             )}
-          </div>
-          
-          {/* Upgrade Info */}
-          <div>
-            <label className="block text-xs font-medium text-slate-600 mb-2 uppercase tracking-wider">
-              Further Upgrades
-            </label>
-            <div className="text-sm text-gray-600 px-4 py-3 bg-white border border-gray-300 rounded-lg">
-              See ROI table below for upgrade options
-            </div>
           </div>
 
           {/* Do you plan to shift the load? */}
