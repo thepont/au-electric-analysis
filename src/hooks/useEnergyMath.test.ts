@@ -1220,6 +1220,166 @@ describe('useEnergyMath', () => {
   });
 
   describe('OVO Waterfall Calculation', () => {
+    describe('Waterfall Prevention of Double-Counting', () => {
+      it('should NOT double-count savings when both pool timer and battery are enabled', () => {
+        // This test verifies the core waterfall principle:
+        // Manual shifts reduce peak FIRST, leaving less for battery to save
+        
+        const baseInputs = {
+          bill: 3000,
+          gasBill: 0,
+          petrolBill: 0,
+          solarSize: 0,
+          batterySize: 13.5,
+          isEV: false,
+          isV2H: false,
+          isHeatPump: false,
+          isInduction: false,
+          hasGasHeating: false,
+          hasGasWater: false,
+          hasGasCooking: false,
+          hasOldDryer: false,
+          gridExportLimit: 5,
+          serviceFuse: 63,
+          hasPool: true,
+          strategies: {
+            chargeEvInWindow: false,
+            chargeBatInWindow: false,
+            runPoolInWindow: false,
+            runHotWaterInWindow: false,
+          },
+          currentSetup: {
+            hotWater: 'resistive' as const,
+            heating: 'none' as const,
+            cooking: 'induction' as const,
+            pool: 'single_speed' as const,
+          },
+        };
+
+        // Scenario 1: Pool timer only (no battery)
+        const poolOnlyInputs = {
+          ...baseInputs,
+          batterySize: 0,
+          strategies: {
+            ...baseInputs.strategies,
+            runPoolInWindow: true,
+          },
+        };
+        const { result: poolOnly } = renderHook(() => useEnergyMath(poolOnlyInputs));
+        const poolOnlySavings = poolOnly.current.batSavings; // Manual shift savings
+
+        // Scenario 2: Battery only (no pool timer)
+        const batteryOnlyInputs = {
+          ...baseInputs,
+          strategies: {
+            ...baseInputs.strategies,
+            chargeBatInWindow: true,
+          },
+        };
+        const { result: batteryOnly } = renderHook(() => useEnergyMath(batteryOnlyInputs));
+        const batteryOnlySavings = batteryOnly.current.batSavings; // Battery arbitrage savings
+
+        // Scenario 3: Both pool timer AND battery (waterfall)
+        const bothInputs = {
+          ...baseInputs,
+          strategies: {
+            ...baseInputs.strategies,
+            chargeBatInWindow: true,
+            runPoolInWindow: true,
+          },
+        };
+        const { result: both } = renderHook(() => useEnergyMath(bothInputs));
+        const combinedSavings = both.current.batSavings;
+
+        // Key assertion: Combined savings should be LESS than simple sum
+        // because pool timer reduces battery's opportunity
+        const naiveSumSavings = poolOnlySavings + batteryOnlySavings;
+        expect(combinedSavings).toBeLessThan(naiveSumSavings);
+        
+        // The difference is the "wasted battery capacity" due to manual shift
+        const wastedOpportunity = naiveSumSavings - combinedSavings;
+        expect(wastedOpportunity).toBeGreaterThan(0);
+      });
+
+      it('should use fixed 4kWh for pool timer shift', () => {
+        const inputs = {
+          bill: 3000,
+          gasBill: 0,
+          petrolBill: 0,
+          solarSize: 0,
+          batterySize: 0,
+          isEV: false,
+          isV2H: false,
+          isHeatPump: false,
+          isInduction: false,
+          hasGasHeating: false,
+          hasGasWater: false,
+          hasGasCooking: false,
+          hasOldDryer: false,
+          gridExportLimit: 5,
+          serviceFuse: 63,
+          hasPool: true,
+          strategies: {
+            chargeEvInWindow: false,
+            chargeBatInWindow: false,
+            runPoolInWindow: true,
+            runHotWaterInWindow: false,
+          },
+          currentSetup: {
+            hotWater: 'resistive' as const,
+            heating: 'none' as const,
+            cooking: 'induction' as const,
+            pool: 'single_speed' as const,
+          },
+        };
+
+        const { result } = renderHook(() => useEnergyMath(inputs));
+
+        // Manual shift savings should be exactly 4 kWh * $0.58 * 365 days
+        const expectedSavings = 4.0 * 0.58 * 365;
+        expect(result.current.manualShiftSavings).toBeCloseTo(expectedSavings, 2);
+      });
+
+      it('should use fixed 3kWh for hot water timer shift', () => {
+        const inputs = {
+          bill: 3000,
+          gasBill: 0,
+          petrolBill: 0,
+          solarSize: 0,
+          batterySize: 0,
+          isEV: false,
+          isV2H: false,
+          isHeatPump: true,
+          isInduction: false,
+          hasGasHeating: false,
+          hasGasWater: false,
+          hasGasCooking: false,
+          hasOldDryer: false,
+          gridExportLimit: 5,
+          serviceFuse: 63,
+          hasPool: false,
+          strategies: {
+            chargeEvInWindow: false,
+            chargeBatInWindow: false,
+            runPoolInWindow: false,
+            runHotWaterInWindow: true,
+          },
+          currentSetup: {
+            hotWater: 'resistive' as const,
+            heating: 'none' as const,
+            cooking: 'induction' as const,
+            pool: 'none' as const,
+          },
+        };
+
+        const { result } = renderHook(() => useEnergyMath(inputs));
+
+        // Manual shift savings should be exactly 3 kWh * $0.58 * 365 days
+        const expectedSavings = 3.0 * 0.58 * 365;
+        expect(result.current.manualShiftSavings).toBeCloseTo(expectedSavings, 2);
+      });
+    });
+
     describe('Manual Load Shifting (Step 1 of Waterfall)', () => {
       it('should calculate pool timer manual shift savings', () => {
         const inputs = {
@@ -1494,6 +1654,167 @@ describe('useEnergyMath', () => {
         expect(withSolar.current.batteryArbitrageSavings).toBeLessThan(
           noSolar.current.batteryArbitrageSavings
         );
+        
+        // The difference should be approximately batteryShiftKwh * 0.3 * FEED_IN * 365
+        // batteryShiftKwh ≈ min(peakConsumption, 13.5) 
+        // peakConsumption ≈ (3000/365/0.41) * 0.45 ≈ 9 kWh
+        // Expected cost ≈ 9 * 0.3 * 0.05 * 365 ≈ $49.3
+        const opportunityCostDiff = noSolar.current.batteryArbitrageSavings - withSolar.current.batteryArbitrageSavings;
+        expect(opportunityCostDiff).toBeGreaterThan(40);
+        expect(opportunityCostDiff).toBeLessThan(60);
+      });
+
+      it('should not apply solar opportunity cost when not charging battery in free window', () => {
+        const inputs = {
+          bill: 3000,
+          gasBill: 0,
+          petrolBill: 0,
+          solarSize: 6.6,
+          batterySize: 13.5,
+          isEV: false,
+          isV2H: false,
+          isHeatPump: false,
+          isInduction: false,
+          hasGasHeating: false,
+          hasGasWater: false,
+          hasGasCooking: false,
+          hasOldDryer: false,
+          gridExportLimit: 5,
+          serviceFuse: 63,
+          hasPool: false,
+          strategies: {
+            chargeEvInWindow: false,
+            chargeBatInWindow: false, // NOT charging in free window
+            runPoolInWindow: false,
+            runHotWaterInWindow: false,
+          },
+          currentSetup: {
+            hotWater: 'resistive' as const,
+            heating: 'none' as const,
+            cooking: 'induction' as const,
+            pool: 'none' as const,
+          },
+        };
+
+        // Test 1: Not charging in free window
+        const { result: notChargingInWindow } = renderHook(() => useEnergyMath(inputs));
+
+        // Test 2: Charging in free window (for comparison)
+        const chargingInputs = {
+          ...inputs,
+          strategies: {
+            ...inputs.strategies,
+            chargeBatInWindow: true,
+          },
+        };
+        const { result: chargingInWindow } = renderHook(() => useEnergyMath(chargingInputs));
+
+        // Key test: When charging in free window with solar, opportunity cost reduces savings
+        // So not charging should have higher (or equal) battery arbitrage savings
+        // Note: The battery still provides value in the current implementation by calculating
+        // the potential arbitrage savings (what you COULD save if you used the battery optimally).
+        // The chargeBatInWindow flag primarily affects whether solar opportunity cost is applied.
+        expect(notChargingInWindow.current.batteryArbitrageSavings).toBeGreaterThanOrEqual(
+          chargingInWindow.current.batteryArbitrageSavings
+        );
+      });
+
+      it('should apply solar opportunity cost proportionally to battery capacity', () => {
+        const baseInputs = {
+          bill: 3000,
+          gasBill: 0,
+          petrolBill: 0,
+          solarSize: 6.6,
+          batterySize: 13.5,
+          isEV: false,
+          isV2H: false,
+          isHeatPump: false,
+          isInduction: false,
+          hasGasHeating: false,
+          hasGasWater: false,
+          hasGasCooking: false,
+          hasOldDryer: false,
+          gridExportLimit: 5,
+          serviceFuse: 63,
+          hasPool: false,
+          strategies: {
+            chargeEvInWindow: false,
+            chargeBatInWindow: true,
+            runPoolInWindow: false,
+            runHotWaterInWindow: false,
+          },
+          currentSetup: {
+            hotWater: 'resistive' as const,
+            heating: 'none' as const,
+            cooking: 'induction' as const,
+            pool: 'none' as const,
+          },
+        };
+
+        // Small battery (5 kWh)
+        const { result: smallBattery } = renderHook(() => 
+          useEnergyMath({ ...baseInputs, batterySize: 5 })
+        );
+
+        // Large battery (30 kWh)
+        const { result: largeBattery } = renderHook(() => 
+          useEnergyMath({ ...baseInputs, batterySize: 30 })
+        );
+
+        // Both should have positive arbitrage savings
+        expect(smallBattery.current.batteryArbitrageSavings).toBeGreaterThan(0);
+        expect(largeBattery.current.batteryArbitrageSavings).toBeGreaterThan(0);
+        
+        // Large battery should have higher savings (more capacity to arbitrage)
+        expect(largeBattery.current.batteryArbitrageSavings).toBeGreaterThan(
+          smallBattery.current.batteryArbitrageSavings
+        );
+      });
+    });
+
+    describe('Zero Peak Edge Case', () => {
+      it('should handle case where manual shifts exceed peak consumption', () => {
+        // Extreme case: Very low usage household with aggressive manual shifting
+        const inputs = {
+          bill: 500, // Very low bill = low daily usage
+          gasBill: 0,
+          petrolBill: 0,
+          solarSize: 0,
+          batterySize: 13.5,
+          isEV: false,
+          isV2H: false,
+          isHeatPump: true,
+          isInduction: false,
+          hasGasHeating: false,
+          hasGasWater: false,
+          hasGasCooking: false,
+          hasOldDryer: false,
+          gridExportLimit: 5,
+          serviceFuse: 63,
+          hasPool: true,
+          strategies: {
+            chargeEvInWindow: false,
+            chargeBatInWindow: true,
+            runPoolInWindow: true, // Pool + HW shifts total 7 kWh
+            runHotWaterInWindow: true,
+          },
+          currentSetup: {
+            hotWater: 'resistive' as const,
+            heating: 'none' as const,
+            cooking: 'induction' as const,
+            pool: 'single_speed' as const,
+          },
+        };
+
+        const { result } = renderHook(() => useEnergyMath(inputs));
+
+        // Manual shifts should still be calculated
+        expect(result.current.manualShiftSavings).toBeGreaterThan(0);
+        
+        // Battery arbitrage should be zero or very low (no peak left to attack)
+        // Peak consumption for $500 bill ≈ 1.5 kWh, manual shifts = 7 kWh
+        // So peak goes to zero, leaving nothing for battery
+        expect(result.current.batteryArbitrageSavings).toBe(0);
       });
     });
 

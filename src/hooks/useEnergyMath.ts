@@ -375,54 +375,75 @@ export const useEnergyMath = (inputs: EnergyInputs): EnergyResults => {
     // ========================================
     // OVO WATERFALL CALCULATION
     // ========================================
+    // This follows the "Waterfall System" to avoid double-counting:
+    // 1. Manual shifts reduce peak load FIRST
+    // 2. Battery can only attack REMAINING peak load
+    // 3. This prevents overestimating ROI by summing independent savings
+    
     // Step 1: Calculate initial peak consumption (the "Enemy")
-    let peakConsumptionKwh = adjustedDailyKwh * 0.45; // 45% of usage is peak (4pm-9pm)
+    // Peak window is 4pm-9pm (~45% of daily usage for typical household)
+    let peakConsumptionKwh = adjustedDailyKwh * 0.45;
     
     // Step 2: Manual Load Shifting (Subtracts from Peak FIRST)
+    // These appliances are moved out of peak via timers (run during 11am-2pm free window)
+    // CRITICAL: Manual shifts reduce the battery's opportunity to save
     let manualShiftKwh = 0;
     
-    // Pool pump timer hack (runs during free window instead of peak)
+    // Pool pump timer hack: Moves 4kWh from peak to free window
+    // Single-speed pump: 1.5kW * 8hrs = 12kWh daily, typically ~4kWh would be in peak
     if (hasPool && strategies.runPoolInWindow && currentSetup.pool === 'single_speed') {
-      const poolDailyKwh = 1.5 * 8 / 24 * adjustedDailyKwh; // Estimate pool's contribution to daily load
-      const poolPeakKwh = Math.min(poolDailyKwh * 0.8, 4.0); // Assume 80% was in peak, max 4kWh
-      manualShiftKwh += poolPeakKwh;
-      peakConsumptionKwh -= poolPeakKwh;
+      manualShiftKwh += 4.0;
+      peakConsumptionKwh -= 4.0;
     }
     
-    // Hot water timer hack (runs during free window instead of peak)
+    // Hot water timer hack: Moves 3kWh from peak to free window
+    // Heat pump hot water (when isHeatPump is true): ~2.5kWh daily average usage
+    // Typically ~1.5kWh would run during peak evening hours when people shower
+    // Timer moves this load to the 11am-2pm free window, saving up to 3kWh from peak
     if (isHeatPump && strategies.runHotWaterInWindow) {
-      const hwDailyKwh = 3600 / 4.0 / 365; // Heat pump hot water: ~2.5kWh/day
-      const hwPeakKwh = Math.min(hwDailyKwh * 0.5, 3.0); // Assume 50% was in peak, max 3kWh
-      manualShiftKwh += hwPeakKwh;
-      peakConsumptionKwh -= hwPeakKwh;
+      manualShiftKwh += 3.0;
+      peakConsumptionKwh -= 3.0;
     }
     
     // Step 3: Data hygiene - ensure we didn't go below zero
     peakConsumptionKwh = Math.max(0, peakConsumptionKwh);
     
     // Step 4: Calculate Manual Shift Savings
+    // Savings = kWh shifted * peak rate * days per year
+    // Cost to charge = $0.00 (free window)
     const manualShiftSavings = manualShiftKwh * PEAK_RATE * 365;
     
     // Step 5: Battery Arbitrage (Attacks REMAINING Peak only)
+    // The battery can only save what's LEFT of the peak after manual shifts
+    // This is the key insight: load shifting REDUCES battery ROI
     const usableCapacity = isV2H ? 60 : batterySize;
     const batteryShiftKwh = Math.min(peakConsumptionKwh, usableCapacity);
     
     // Step 6: Calculate Battery Arbitrage Savings
-    // Include solar opportunity cost if we have solar
+    // Gross savings from arbitrage (buy at $0 during free window, avoid $0.58 peak)
+    const grossBatterySavings = batteryShiftKwh * (PEAK_RATE - FREE_WINDOW) * 365;
+    
+    // Solar Opportunity Cost (The "Hidden Cost")
+    // If you have solar generating during the free window (11am-2pm), your inverter
+    // will prioritize charging the battery from solar BEFORE grid power.
+    // This means you lose feed-in tariff revenue (~5c/kWh) on that solar energy.
+    // Conservative estimate: 30% of battery charge comes from solar during free window
     let solarOpportunityCost = 0;
     if (solarSize > 0 && batterySize > 0 && strategies.chargeBatInWindow) {
-      // If charging during free window when solar is generating, we lose feed-in tariff
-      // Conservative estimate: 30% of battery charge comes from solar that could have been exported
       solarOpportunityCost = batteryShiftKwh * 0.3 * FEED_IN * 365;
     }
     
-    // Adjust for wasted capacity due to fuse constraint
+    // Fuse Constraint Cost (Physical limit on grid import)
+    // If service fuse is too small, we can't import enough energy during free window
     const wastedValue = wastedKwh * (PEAK_RATE - FREE_WINDOW) * 365;
+    
+    // Net battery arbitrage savings after all costs
     const batteryArbitrageSavings = Math.max(0, 
-      batteryShiftKwh * (PEAK_RATE - FREE_WINDOW) * 365 - wastedValue - solarOpportunityCost
+      grossBatterySavings - wastedValue - solarOpportunityCost
     );
     
     // Step 7: Total Battery Savings (for backward compatibility)
+    // This combines manual shifts + battery arbitrage (both use OVO Free 3 window)
     const batSavings = manualShiftSavings + batteryArbitrageSavings;
 
     
