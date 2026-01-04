@@ -40,6 +40,7 @@ interface EnergyInputs {
     pool: 'none' | 'single_speed' | 'variable_speed';
     dryer: 'vented' | 'heatpump';
   };
+  roomCount: number; // Number of rooms to heat/cool
 }
 
 interface ApplianceAssumption {
@@ -87,6 +88,7 @@ interface EnergyResults {
   gasDisconnectionBonus: number;
   // Current setup info for ROI calculations
   currentHeatingType: 'gas' | 'resistive' | 'rc' | 'none';
+  roomCount: number; // Number of rooms to heat/cool (affects RC cost)
 }
 
 export const useEnergyMath = (inputs: EnergyInputs): EnergyResults => {
@@ -564,6 +566,7 @@ export const useEnergyMath = (inputs: EnergyInputs): EnergyResults => {
       gasDisconnectionBonus,
       // Current setup info for ROI calculations
       currentHeatingType: currentSetup.heating,
+      roomCount: inputs.roomCount,
     };
   }, [
     inputs.bill,
@@ -590,5 +593,6 @@ export const useEnergyMath = (inputs: EnergyInputs): EnergyResults => {
     inputs.currentSetup.cooking,
     inputs.currentSetup.pool,
     inputs.currentSetup.dryer,
+    inputs.roomCount,
   ]);
 };

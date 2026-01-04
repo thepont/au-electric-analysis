@@ -31,6 +31,8 @@ interface EnergyState {
     pool: 'none' | 'single_speed' | 'variable_speed';
     dryer: 'vented' | 'heatpump';
   };
+  // House configuration
+  roomCount: number; // Number of rooms to heat/cool (affects reverse cycle cost)
 }
 
 const DEFAULT_STATE: EnergyState = {
@@ -63,6 +65,9 @@ const DEFAULT_STATE: EnergyState = {
     pool: 'none',
     dryer: 'vented',
   },
+  // Australian average: 3.3 bedrooms (ABS 2021), typically 4-5 rooms to heat/cool
+  // (living, bedrooms, some homes include dining/study)
+  roomCount: 4, // Conservative estimate for typical Australian home
 };
 
 // Parse hash string to state object
@@ -98,6 +103,7 @@ const parseHash = (hash: string): EnergyState => {
       pool: (params.get('currentPool') || DEFAULT_STATE.currentSetup.pool) as 'none' | 'single_speed' | 'variable_speed',
       dryer: (params.get('currentDryer') || DEFAULT_STATE.currentSetup.dryer) as 'vented' | 'heatpump',
     },
+    roomCount: parseFloat(params.get('rooms') || String(DEFAULT_STATE.roomCount)),
   };
 };
 
@@ -129,6 +135,7 @@ const serializeHash = (state: EnergyState): string => {
   params.set('currentCooking', state.currentSetup.cooking);
   params.set('currentPool', state.currentSetup.pool);
   params.set('currentDryer', state.currentSetup.dryer);
+  params.set('rooms', String(state.roomCount));
   return `#${params.toString()}`;
 };
 

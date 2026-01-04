@@ -4,7 +4,23 @@ import { Tooltip } from './Tooltip';
 const ESTIMATION_PREFIX = '~';
 
 // Upfront cost constants (2026 estimates)
-const REVERSE_CYCLE_INSTALL_COST = 5500; // Mid-range split system installation
+// Reverse Cycle Heating/Cooling Installation Costs (Australian Market 2024-2026)
+// Source: Canstar Blue, Choice.com.au, HVAC installer quotes
+// 
+// Small systems (1-2 rooms): $2,500-$4,500 (single split system)
+// Medium systems (3-4 rooms): $5,500-$8,500 (2 split systems or small ducted)
+// Large systems (5-6 rooms): $8,500-$12,000 (ducted system)
+// Extra Large (7+ rooms): $12,000-$18,000 (large ducted system)
+//
+// Notes:
+// - Single split system: ~$2,500-$3,500 installed per unit
+// - Ducted systems: $8,000-$18,000 depending on house size, zone control
+// - Includes installation, electrical work, removal of old system
+// - Prices vary significantly by region, brand (Daikin/Mitsubishi premium)
+// - Multi-head systems can be $4,000-$6,000 for 2-3 rooms
+//
+// Conservative estimate: $2,200 per room (includes shared infrastructure amortization)
+const REVERSE_CYCLE_COST_PER_ROOM = 2200;
 
 interface ROITableProps {
   results: {
@@ -36,6 +52,7 @@ interface ROITableProps {
     gasDisconnectionBonus: number;
     // Current setup info
     currentHeatingType: 'gas' | 'resistive' | 'rc' | 'none';
+    roomCount: number; // Number of rooms to heat/cool
   };
 }
 
@@ -99,7 +116,9 @@ export const ROITable = ({ results }: ROITableProps) => {
     {
       name: 'Reverse Cycle Heating',
       cost: results.heatingSavings > 0 
-        ? (results.currentHeatingType === 'rc' ? 0 : REVERSE_CYCLE_INSTALL_COST)
+        ? (results.currentHeatingType === 'rc' 
+            ? 0 
+            : REVERSE_CYCLE_COST_PER_ROOM * results.roomCount)  // Scales with house size
         : 0,
       liability: results.liabilityCosts.heating,
       saving: results.heatingSavings,

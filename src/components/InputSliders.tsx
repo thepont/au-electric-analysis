@@ -20,6 +20,13 @@ interface InputSlidersProps {
       runPoolInWindow: boolean;
       runHotWaterInWindow: boolean;
     };
+    currentSetup: {
+      hotWater: 'gas' | 'resistive' | 'heatpump';
+      heating: 'gas' | 'resistive' | 'rc' | 'none';
+      cooking: 'gas' | 'induction';
+      pool: 'none' | 'single_speed' | 'variable_speed';
+      dryer: 'vented' | 'heatpump';
+    };
   };
   updateState: (newState: Partial<InputSlidersProps['state']>) => void;
 }
