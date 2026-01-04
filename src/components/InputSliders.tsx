@@ -14,6 +14,7 @@ interface InputSlidersProps {
     gridExportLimit: number;
     serviceFuse: number;
     hasPool: boolean;
+    roomCount: number;
     strategies: {
       chargeEvInWindow: boolean;
       chargeBatInWindow: boolean;
@@ -140,67 +141,7 @@ export const InputSliders = ({ state, updateState }: InputSlidersProps) => {
         </div>
       </div>
 
-      {/* System Size Section */}
-      <div className="grid md:grid-cols-2 gap-4 pt-4 border-t border-gray-200">
-        {/* Solar Size */}
-        <div>
-          <label className="block text-sm font-medium text-slate-400 mb-2 uppercase tracking-widest">
-            Solar System Size
-          </label>
-          <div className="flex items-center space-x-2">
-            <input
-              type="number"
-              min="0"
-              max="20"
-              step="0.5"
-              value={state.solarSize}
-              onChange={(e) => updateState({ solarSize: parseFloat(e.target.value) || 0 })}
-              className="w-24 px-3 py-2 border border-gray-300 rounded-md text-sm focus:ring-2 focus:ring-yellow-500 focus:border-transparent"
-            />
-            <span className="text-sm text-gray-600">kW</span>
-          </div>
-          <input
-            type="range"
-            min="0"
-            max="20"
-            step="0.5"
-            value={state.solarSize}
-            onChange={(e) => updateState({ solarSize: parseFloat(e.target.value) })}
-            className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer accent-yellow-500 mt-2"
-          />
-        </div>
 
-        {/* Battery Size */}
-        <div>
-          <label className="block text-sm font-medium text-slate-400 mb-2 uppercase tracking-widest">
-            Battery Capacity
-            {state.isV2H && <span className="ml-2 text-xs text-amber-500">(V2H: 60 kWh)</span>}
-          </label>
-          <div className="flex items-center space-x-2">
-            <input
-              type="number"
-              min="0"
-              max="40"
-              step="0.5"
-              value={state.batterySize}
-              onChange={(e) => updateState({ batterySize: parseFloat(e.target.value) || 0 })}
-              className="w-24 px-3 py-2 border border-gray-300 rounded-md text-sm focus:ring-2 focus:ring-green-500 focus:border-transparent"
-              disabled={state.isV2H}
-            />
-            <span className="text-sm text-gray-600">kWh</span>
-          </div>
-          <input
-            type="range"
-            min="0"
-            max="40"
-            step="0.5"
-            value={state.batterySize}
-            onChange={(e) => updateState({ batterySize: parseFloat(e.target.value) })}
-            className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer accent-green-600 mt-2"
-            disabled={state.isV2H}
-          />
-        </div>
-      </div>
 
       {/* Grid Export Limit Section */}
       <div className="pt-4 border-t border-gray-200">
@@ -238,6 +179,30 @@ export const InputSliders = ({ state, updateState }: InputSlidersProps) => {
           }
           return null;
         })()}
+      </div>
+
+      {/* Room Count Section */}
+      <div className="pt-4 border-t border-gray-200">
+        <label className="block text-sm font-medium text-slate-400 mb-2 uppercase tracking-widest">
+          Rooms to Heat/Cool
+        </label>
+        <p className="text-xs text-slate-500 mb-3">
+          How many rooms do you need to heat/cool? This affects reverse cycle system sizing and cost.
+        </p>
+        <div className="flex items-center space-x-4">
+          <input
+            type="number"
+            min="1"
+            max="10"
+            value={state.roomCount}
+            onChange={(e) => updateState({ roomCount: parseInt(e.target.value) || 4 })}
+            className="w-20 px-3 py-2 border border-gray-300 rounded-md text-sm focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+          />
+          <span className="text-sm text-gray-600">rooms</span>
+          <span className="text-xs text-gray-400">
+            (Typical: 4-5 rooms)
+          </span>
+        </div>
       </div>
     </div>
   );

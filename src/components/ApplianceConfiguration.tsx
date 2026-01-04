@@ -1,4 +1,4 @@
-import { Droplet, Flame, Zap, Waves, Wind, Car, Battery } from 'lucide-react';
+import { Droplet, Flame, Zap, Waves, Wind, Car, Battery, Sun } from 'lucide-react';
 
 interface ApplianceConfigurationProps {
   state: {
@@ -21,6 +21,7 @@ interface ApplianceConfigurationProps {
       runPoolInWindow: boolean;
     };
     batterySize: number;
+    solarSize: number;
   };
   updateState: (newState: any) => void;
 }
@@ -31,8 +32,151 @@ export const ApplianceConfiguration = ({ state, updateState }: ApplianceConfigur
       <div className="mb-4">
         <h3 className="text-lg font-semibold text-slate-900 tracking-tighter mb-2">Appliance Configuration</h3>
         <p className="text-sm text-slate-600">
-          For each appliance, tell us what you have now, if you're planning to upgrade, and if you want to shift the load to the free window.
+          Configure your energy generation, storage, and consumption appliances. Tell us what you have now, if you're planning to upgrade, and if you want to shift the load to the free window.
         </p>
+      </div>
+
+      {/* Solar System */}
+      <div className="bg-slate-50 rounded-xl p-5 border border-slate-200">
+        <div className="flex items-center space-x-2 mb-4">
+          <Sun className="w-5 h-5 text-amber-500" />
+          <h4 className="font-semibold text-slate-900">Solar System</h4>
+        </div>
+        
+        <div className="grid md:grid-cols-2 gap-4">
+          {/* What do you have now? */}
+          <div>
+            <label className="block text-xs font-medium text-slate-600 mb-2 uppercase tracking-wider">
+              What do you have now?
+            </label>
+            <div className="space-y-2">
+              <div className="flex items-center space-x-2">
+                <input
+                  type="number"
+                  min="0"
+                  max="20"
+                  step="0.5"
+                  value={state.solarSize}
+                  onChange={(e) => updateState({ solarSize: parseFloat(e.target.value) || 0 })}
+                  className="w-24 px-3 py-2 border border-gray-300 rounded-md text-sm focus:ring-2 focus:ring-amber-500 focus:border-transparent"
+                />
+                <span className="text-sm text-gray-600">kW</span>
+              </div>
+              <input
+                type="range"
+                min="0"
+                max="20"
+                step="0.5"
+                value={state.solarSize}
+                onChange={(e) => updateState({ solarSize: parseFloat(e.target.value) })}
+                className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer accent-amber-500"
+              />
+            </div>
+          </div>
+
+          {/* Do you plan to upgrade? */}
+          <div>
+            <label className="block text-xs font-medium text-slate-600 mb-2 uppercase tracking-wider">
+              Plan to upgrade?
+            </label>
+            <div className="text-sm text-gray-600 px-4 py-2 bg-white border border-gray-300 rounded-lg">
+              Configure size on left →
+            </div>
+            <p className="text-xs text-gray-500 mt-1">Solar upgrades calculated in ROI table</p>
+          </div>
+        </div>
+      </div>
+
+      {/* Battery Storage */}
+      <div className="bg-slate-50 rounded-xl p-5 border border-slate-200">
+        <div className="flex items-center space-x-2 mb-4">
+          <Battery className="w-5 h-5 text-blue-600" />
+          <h4 className="font-semibold text-slate-900">Battery Storage</h4>
+        </div>
+        
+        <div className="grid md:grid-cols-3 gap-4">
+          {/* What do you have now? */}
+          <div>
+            <label className="block text-xs font-medium text-slate-600 mb-2 uppercase tracking-wider">
+              What do you have now?
+            </label>
+            {state.isV2H ? (
+              <div className="text-sm text-gray-600 px-4 py-2 bg-white border border-gray-300 rounded-lg">
+                Using V2H (60 kWh)
+              </div>
+            ) : (
+              <div className="space-y-2">
+                <div className="flex items-center space-x-2">
+                  <input
+                    type="number"
+                    min="0"
+                    max="40"
+                    step="0.5"
+                    value={state.batterySize}
+                    onChange={(e) => updateState({ batterySize: parseFloat(e.target.value) || 0 })}
+                    className="w-24 px-3 py-2 border border-gray-300 rounded-md text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  />
+                  <span className="text-sm text-gray-600">kWh</span>
+                </div>
+                <input
+                  type="range"
+                  min="0"
+                  max="40"
+                  step="0.5"
+                  value={state.batterySize}
+                  onChange={(e) => updateState({ batterySize: parseFloat(e.target.value) })}
+                  className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer accent-blue-500"
+                />
+              </div>
+            )}
+            {state.isV2H && (
+              <p className="text-xs text-gray-500 mt-1">V2H provides battery storage</p>
+            )}
+          </div>
+
+          {/* Do you plan to upgrade? */}
+          <div>
+            <label className="block text-xs font-medium text-slate-600 mb-2 uppercase tracking-wider">
+              Plan to upgrade?
+            </label>
+            <div className="text-sm text-gray-600 px-4 py-2 bg-white border border-gray-300 rounded-lg">
+              Calculated in ROI table
+            </div>
+          </div>
+
+          {/* Do you plan to shift the load? */}
+          <div>
+            <label className="block text-xs font-medium text-slate-600 mb-2 uppercase tracking-wider">
+              Charge during 11am-2pm?
+            </label>
+            <button
+              onClick={() => updateState({ 
+                strategies: { 
+                  ...state.strategies, 
+                  chargeBatInWindow: !state.strategies.chargeBatInWindow 
+                } 
+              })}
+              disabled={state.batterySize === 0 && !state.isV2H}
+              className={`w-full px-4 py-2 rounded-lg border-2 transition-all text-sm font-medium relative ${
+                state.strategies.chargeBatInWindow
+                  ? 'border-blue-500 bg-blue-50 text-blue-700'
+                  : (state.batterySize > 0 || state.isV2H)
+                  ? 'border-gray-300 bg-white text-gray-700 hover:border-gray-400'
+                  : 'border-gray-200 bg-gray-100 text-gray-400 cursor-not-allowed'
+              }`}
+            >
+              {state.strategies.chargeBatInWindow && (
+                <span className="absolute -top-1 -right-1 w-5 h-5 bg-blue-500 rounded-full flex items-center justify-center">
+                  <span className="text-white text-xs font-bold">✓</span>
+                </span>
+              )}
+              Charge Free (5.0 kW)
+            </button>
+            {(state.batterySize === 0 && !state.isV2H) && (
+              <p className="text-xs text-gray-500 mt-1">Requires battery</p>
+            )}
+          </div>
+        </div>
       </div>
 
       {/* Electric Vehicle */}
@@ -124,73 +268,7 @@ export const ApplianceConfiguration = ({ state, updateState }: ApplianceConfigur
         </div>
       </div>
 
-      {/* Battery Storage */}
-      <div className="bg-slate-50 rounded-xl p-5 border border-slate-200">
-        <div className="flex items-center space-x-2 mb-4">
-          <Battery className="w-5 h-5 text-blue-600" />
-          <h4 className="font-semibold text-slate-900">Battery Storage</h4>
-        </div>
-        
-        <div className="grid md:grid-cols-3 gap-4">
-          {/* What do you have now? */}
-          <div>
-            <label className="block text-xs font-medium text-slate-600 mb-2 uppercase tracking-wider">
-              What do you have now?
-            </label>
-            <div className="text-sm text-gray-600 px-4 py-2 bg-white border border-gray-300 rounded-lg">
-              {state.batterySize > 0 
-                ? `${state.batterySize} kWh Battery` 
-                : state.isV2H
-                ? 'Using V2H (60 kWh)'
-                : 'No Battery'}
-            </div>
-            <p className="text-xs text-gray-500 mt-1">Configure in "Your Energy Setup" above</p>
-          </div>
 
-          {/* Do you plan to upgrade? */}
-          <div>
-            <label className="block text-xs font-medium text-slate-600 mb-2 uppercase tracking-wider">
-              Plan to upgrade?
-            </label>
-            <div className="text-sm text-gray-600 px-4 py-2 bg-white border border-gray-300 rounded-lg">
-              Calculated in ROI table
-            </div>
-          </div>
-
-          {/* Do you plan to shift the load? */}
-          <div>
-            <label className="block text-xs font-medium text-slate-600 mb-2 uppercase tracking-wider">
-              Charge during 11am-2pm?
-            </label>
-            <button
-              onClick={() => updateState({ 
-                strategies: { 
-                  ...state.strategies, 
-                  chargeBatInWindow: !state.strategies.chargeBatInWindow 
-                } 
-              })}
-              disabled={state.batterySize === 0 && !state.isV2H}
-              className={`w-full px-4 py-2 rounded-lg border-2 transition-all text-sm font-medium relative ${
-                state.strategies.chargeBatInWindow
-                  ? 'border-blue-500 bg-blue-50 text-blue-700'
-                  : (state.batterySize > 0 || state.isV2H)
-                  ? 'border-gray-300 bg-white text-gray-700 hover:border-gray-400'
-                  : 'border-gray-200 bg-gray-100 text-gray-400 cursor-not-allowed'
-              }`}
-            >
-              {state.strategies.chargeBatInWindow && (
-                <span className="absolute -top-1 -right-1 w-5 h-5 bg-blue-500 rounded-full flex items-center justify-center">
-                  <span className="text-white text-xs font-bold">✓</span>
-                </span>
-              )}
-              Charge Free (5.0 kW)
-            </button>
-            {(state.batterySize === 0 && !state.isV2H) && (
-              <p className="text-xs text-gray-500 mt-1">Requires battery</p>
-            )}
-          </div>
-        </div>
-      </div>
 
       {/* Hot Water */}
       <div className="bg-slate-50 rounded-xl p-5 border border-slate-200">

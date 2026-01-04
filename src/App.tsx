@@ -55,32 +55,6 @@ function App() {
               Appliance Strategy
             </h2>
             <ApplianceConfiguration state={state} updateState={updateState} />
-            
-            {/* Room Count Configuration */}
-            <div className="mt-6 pt-6 border-t border-gray-200">
-              <div className="max-w-md">
-                <label className="block text-sm font-medium text-slate-700 mb-2">
-                  Rooms to Heat/Cool
-                </label>
-                <p className="text-xs text-slate-500 mb-3">
-                  How many rooms do you need to heat/cool? This affects reverse cycle system sizing and cost.
-                </p>
-                <div className="flex items-center space-x-4">
-                  <input
-                    type="number"
-                    min="1"
-                    max="10"
-                    value={state.roomCount}
-                    onChange={(e) => updateState({ roomCount: parseInt(e.target.value) || 4 })}
-                    className="w-20 px-3 py-2 border border-gray-300 rounded-md text-sm focus:ring-2 focus:ring-purple-500 focus:border-transparent"
-                  />
-                  <span className="text-sm text-gray-600">rooms</span>
-                  <span className="text-xs text-gray-400">
-                    (Typical: 4-5 rooms)
-                  </span>
-                </div>
-              </div>
-            </div>
           </div>
 
           {/* Load Gauge */}
