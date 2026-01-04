@@ -254,7 +254,7 @@ export const calculateDailySummary = (hourlyData) => {
   // Grid Independence: % of consumption covered by solar+battery (not PAID grid)
   // Note: Free grid imports don't count against independence since they're free
   const gridIndependence = totalConsumption > 0 
-    ? ((totalConsumption - totalGridImport) / totalConsumption) * 100 
+    ? ((totalConsumption - paidGridImport) / totalConsumption) * 100 
     : 0;
   
   // Wasted Solar: Energy exported when battery is full
@@ -282,6 +282,7 @@ export const calculateDailySummary = (hourlyData) => {
     gridIndependence: parseFloat(gridIndependence.toFixed(1)),
     wastedSolar: parseFloat(wastedSolar.toFixed(2)),
     peakGridUsage: parseFloat(peakGridImport.toFixed(2)),
+    peakPaidGridUsage: parseFloat(peakPaidGridUsage.toFixed(2)),
     minTemp: parseFloat(minTemp.toFixed(1)),
     maxTemp: parseFloat(Math.max(...hourlyData.map(h => h.temperature)).toFixed(1)),
     comfortWarning
