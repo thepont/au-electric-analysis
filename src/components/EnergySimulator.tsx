@@ -23,7 +23,7 @@ export const EnergySimulator = (props: EnergySimulatorProps = {}) => {
   
   const [heatingStart, setHeatingStart] = useState(17);
   const [heatingEnd, setHeatingEnd] = useState(22);
-  const [loadShifting, setLoadShifting] = useState(false);
+  const [loadShifting, setLoadShifting] = useState(true); // Default to smart load shifting
   const [season, setSeason] = useState<'Summer' | 'Winter'>('Summer');
   const [strategy, setStrategy] = useState<'standard' | 'ovo'>('ovo');
   const [insulation, setInsulation] = useState<'Sealed' | 'Leaky'>('Sealed');
