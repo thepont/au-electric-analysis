@@ -85,6 +85,8 @@ interface EnergyResults {
   heatingSavings: number;
   cookingSavings: number;
   gasDisconnectionBonus: number;
+  // Current setup info for ROI calculations
+  currentHeatingType: 'gas' | 'resistive' | 'rc' | 'none';
 }
 
 export const useEnergyMath = (inputs: EnergyInputs): EnergyResults => {
@@ -561,6 +563,8 @@ export const useEnergyMath = (inputs: EnergyInputs): EnergyResults => {
       heatingSavings,
       cookingSavings,
       gasDisconnectionBonus,
+      // Current setup info for ROI calculations
+      currentHeatingType: currentSetup.heating,
     };
   }, [
     inputs.bill,

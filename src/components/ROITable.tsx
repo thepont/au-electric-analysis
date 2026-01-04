@@ -31,6 +31,8 @@ interface ROITableProps {
     heatingSavings: number;
     cookingSavings: number;
     gasDisconnectionBonus: number;
+    // Current setup info
+    currentHeatingType: 'gas' | 'resistive' | 'rc' | 'none';
   };
 }
 
@@ -93,7 +95,9 @@ export const ROITable = ({ results }: ROITableProps) => {
     // Gas Conversion - Heating
     {
       name: 'Reverse Cycle Heating',
-      cost: results.heatingSavings > 0 ? 0 : 0, // Usually part of existing AC
+      cost: results.heatingSavings > 0 
+        ? (results.currentHeatingType === 'rc' ? 0 : 5500) // $0 if already have RC, else $5500 for new system
+        : 0,
       liability: results.liabilityCosts.heating,
       saving: results.heatingSavings,
       link: null,
