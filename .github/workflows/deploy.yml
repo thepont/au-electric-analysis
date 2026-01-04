@@ -7,16 +7,14 @@ on:
   workflow_dispatch:
 
 permissions:
-  contents: read
-  pages: write
-  id-token: write
+  contents: write
 
 concurrency:
   group: "pages"
   cancel-in-progress: false
 
 jobs:
-  build:
+  deploy:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
@@ -34,21 +32,61 @@ jobs:
       - name: Build
         run: npm run build
 
-      - name: Setup Pages
-        uses: actions/configure-pages@v4
+      - name: Check if gh-pages branch exists
+        id: check-gh-pages
+        run: |
+          if git ls-remote --heads origin gh-pages | grep gh-pages; then
+            echo "exists=true" >> $GITHUB_OUTPUT
+          else
+            echo "exists=false" >> $GITHUB_OUTPUT
+          fi
 
-      - name: Upload artifact
-        uses: actions/upload-pages-artifact@v3
+      - name: Checkout gh-pages branch
+        if: steps.check-gh-pages.outputs.exists == 'true'
+        uses: actions/checkout@v4
         with:
-          path: './dist'
+          ref: gh-pages
+          path: gh-pages
 
-  deploy:
-    environment:
-      name: github-pages
-      url: ${{ steps.deployment.outputs.page_url }}
-    runs-on: ubuntu-latest
-    needs: build
-    steps:
-      - name: Deploy to GitHub Pages
-        id: deployment
-        uses: actions/deploy-pages@v4
+      - name: Create gh-pages branch
+        if: steps.check-gh-pages.outputs.exists == 'false'
+        run: |
+          mkdir gh-pages
+          cd gh-pages
+          git init
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git checkout -b gh-pages
+          git remote add origin https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/${{ github.repository }}.git
+
+      - name: Deploy to gh-pages root
+        run: |
+          # Backup preview directory if it exists
+          if [ -d "gh-pages/preview" ]; then
+            cp -r gh-pages/preview /tmp/preview-backup
+          fi
+          
+          # Clear gh-pages directory but keep .git
+          cd gh-pages
+          find . -maxdepth 1 ! -name '.git' ! -name '.' ! -name '..' -exec rm -rf {} +
+          
+          # Copy new build files to root
+          cp -r ../dist/* .
+          
+          # Restore preview directory if it existed
+          if [ -d "/tmp/preview-backup" ]; then
+            cp -r /tmp/preview-backup ./preview
+          fi
+          
+          # Configure git
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          
+          # Commit and push
+          git add .
+          if git diff --staged --quiet; then
+            echo "No changes to commit"
+          else
+            git commit -m "Deploy to GitHub Pages from main branch"
+            git push origin gh-pages
+          fi
