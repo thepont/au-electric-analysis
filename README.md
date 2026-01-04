@@ -49,6 +49,20 @@ npm run preview
 
 The app automatically deploys to GitHub Pages when merged to `main` via GitHub Actions.
 
+**Note:** Both the main deployment and preview deployments use the `gh-pages` branch. The main site deploys to the root, while PR previews deploy to subdirectories. Make sure GitHub Pages is configured to deploy from the `gh-pages` branch in your repository settings.
+
+### Preview Deployments
+
+Pull requests automatically get preview deployments! When you open or update a PR:
+
+1. The preview workflow builds your changes
+2. Deploys to `https://thepont.github.io/au-electric-analysis/preview/pr-{number}/`
+3. Comments on your PR with the preview URL and commit SHA
+4. Updates automatically on new commits
+5. Cleans up when the PR is closed
+
+This allows reviewers and contributors to test changes live before merging.
+
 ## 📖 Documentation
 
 See [spec.md](spec.md) for complete project specification and implementation details.
