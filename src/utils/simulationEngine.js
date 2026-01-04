@@ -234,7 +234,25 @@ export const calculateDailySummary = (hourlyData) => {
   const totalGridExport = hourlyData.reduce((sum, h) => sum + h.gridExport, 0);
   const peakGridImport = Math.max(...hourlyData.map(h => h.gridImport));
   
-  // Grid Independence: % of consumption covered by solar+battery (not grid)
+  // Split grid imports: FREE (11am-2pm) vs PAID (all other times)
+  const freeGridImport = hourlyData
+    .filter(h => h.isFreeWindow)
+    .reduce((sum, h) => sum + h.gridImport, 0);
+  const paidGridImport = hourlyData
+    .filter(h => !h.isFreeWindow)
+    .reduce((sum, h) => sum + h.gridImport, 0);
+  
+  // Free Power Captured: How much free electricity we used (THE KEY METRIC)
+  // This is what we optimize for with OVO Free 3 strategy
+  const freePowerCaptured = freeGridImport;
+  
+  // Maximum possible free power (3 hours × typical max import rate)
+  // Conservative estimate: 15 kW × 3 hours = 45 kWh theoretical max
+  const maxPossibleFree = 15 * 3; // 45 kWh
+  const freePowerUtilization = (freePowerCaptured / maxPossibleFree) * 100;
+  
+  // Grid Independence: % of consumption covered by solar+battery (not PAID grid)
+  // Note: Free grid imports don't count against independence since they're free
   const gridIndependence = totalConsumption > 0 
     ? ((totalConsumption - totalGridImport) / totalConsumption) * 100 
     : 0;
@@ -242,8 +260,11 @@ export const calculateDailySummary = (hourlyData) => {
   // Wasted Solar: Energy exported when battery is full
   const wastedSolar = totalGridExport;
   
-  // Peak Grid Usage: Maximum single-hour import
-  const peakGridUsage = peakGridImport;
+  // Peak PAID Grid Usage: Maximum single-hour import outside free window
+  const peakPaidGridUsage = Math.max(
+    ...hourlyData.filter(h => !h.isFreeWindow).map(h => h.gridImport),
+    0
+  );
   
   // Temperature warnings
   const minTemp = Math.min(...hourlyData.map(h => h.temperature));
@@ -254,9 +275,13 @@ export const calculateDailySummary = (hourlyData) => {
     totalConsumption: parseFloat(totalConsumption.toFixed(2)),
     totalGridImport: parseFloat(totalGridImport.toFixed(2)),
     totalGridExport: parseFloat(totalGridExport.toFixed(2)),
+    freeGridImport: parseFloat(freeGridImport.toFixed(2)),
+    paidGridImport: parseFloat(paidGridImport.toFixed(2)),
+    freePowerCaptured: parseFloat(freePowerCaptured.toFixed(2)),
+    freePowerUtilization: parseFloat(Math.min(freePowerUtilization, 100).toFixed(1)),
     gridIndependence: parseFloat(gridIndependence.toFixed(1)),
     wastedSolar: parseFloat(wastedSolar.toFixed(2)),
-    peakGridUsage: parseFloat(peakGridUsage.toFixed(2)),
+    peakGridUsage: parseFloat(peakGridImport.toFixed(2)),
     minTemp: parseFloat(minTemp.toFixed(1)),
     maxTemp: parseFloat(Math.max(...hourlyData.map(h => h.temperature)).toFixed(1)),
     comfortWarning

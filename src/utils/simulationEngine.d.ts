@@ -40,9 +40,14 @@ export interface DailySummary {
   totalConsumption: number;
   totalGridImport: number;
   totalGridExport: number;
+  freeGridImport: number;
+  paidGridImport: number;
+  freePowerCaptured: number;
+  freePowerUtilization: number;
   gridIndependence: number;
   wastedSolar: number;
   peakGridUsage: number;
+  peakPaidGridUsage: number;
   minTemp: number;
   maxTemp: number;
   comfortWarning: string | null;

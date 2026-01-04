@@ -334,39 +334,48 @@ export const EnergySimulator = (props: EnergySimulatorProps = {}) => {
         </h3>
         
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+          {/* Free Power Captured - THE KEY METRIC */}
+          <div className="bg-white/10 backdrop-blur-sm rounded-2xl p-4 border border-white/20">
+            <div className="text-slate-400 text-sm mb-1">Free Power Captured</div>
+            <div className={`text-3xl font-bold ${
+              summary.freePowerCaptured >= 10 ? 'text-emerald-400' :
+              summary.freePowerCaptured >= 5 ? 'text-amber-400' :
+              'text-red-400'
+            }`}>
+              {summary.freePowerCaptured.toFixed(1)} kWh
+            </div>
+            <div className="text-xs text-slate-500 mt-1">
+              11am-2pm free window
+            </div>
+          </div>
+
+          {/* Peak PAID Grid Import */}
+          <div className="bg-white/10 backdrop-blur-sm rounded-2xl p-4 border border-white/20">
+            <div className="text-slate-400 text-sm mb-1">Peak Paid Import</div>
+            <div className={`text-3xl font-bold ${
+              summary.peakPaidGridUsage === 0 ? 'text-emerald-400' :
+              summary.peakPaidGridUsage < 3 ? 'text-amber-400' :
+              'text-red-400'
+            }`}>
+              {summary.peakPaidGridUsage.toFixed(2)} kW
+            </div>
+            <div className="text-xs text-slate-500 mt-1">
+              Outside free window
+            </div>
+          </div>
+
           {/* Grid Independence */}
           <div className="bg-white/10 backdrop-blur-sm rounded-2xl p-4 border border-white/20">
             <div className="text-slate-400 text-sm mb-1">Grid Independence</div>
             <div className={`text-3xl font-bold ${
-              summary.gridIndependence >= 80 ? 'text-emerald-400' :
-              summary.gridIndependence >= 50 ? 'text-amber-400' :
+              summary.gridIndependence >= 95 ? 'text-emerald-400' :
+              summary.gridIndependence >= 80 ? 'text-amber-400' :
               'text-red-400'
             }`}>
               {summary.gridIndependence.toFixed(1)}%
             </div>
-          </div>
-
-          {/* Peak Grid Usage */}
-          <div className="bg-white/10 backdrop-blur-sm rounded-2xl p-4 border border-white/20">
-            <div className="text-slate-400 text-sm mb-1">Peak Grid Import</div>
-            <div className={`text-3xl font-bold ${
-              summary.peakGridUsage === 0 ? 'text-emerald-400' :
-              summary.peakGridUsage < 3 ? 'text-amber-400' :
-              'text-red-400'
-            }`}>
-              {summary.peakGridUsage.toFixed(2)} kW
-            </div>
-          </div>
-
-          {/* Wasted Solar */}
-          <div className="bg-white/10 backdrop-blur-sm rounded-2xl p-4 border border-white/20">
-            <div className="text-slate-400 text-sm mb-1">Solar Export</div>
-            <div className={`text-3xl font-bold ${
-              summary.wastedSolar < 5 ? 'text-emerald-400' :
-              summary.wastedSolar < 15 ? 'text-amber-400' :
-              'text-red-400'
-            }`}>
-              {summary.wastedSolar.toFixed(1)} kWh
+            <div className="text-xs text-slate-500 mt-1">
+              Excluding free imports
             </div>
           </div>
 
@@ -385,15 +394,27 @@ export const EnergySimulator = (props: EnergySimulatorProps = {}) => {
 
         {/* Insights and Warnings */}
         <div className="space-y-3">
-          {summary.gridIndependence >= 80 && (
+          {summary.freePowerCaptured >= 10 && summary.gridIndependence >= 95 && (
             <div className="bg-emerald-500/20 border border-emerald-500/50 rounded-xl p-4 text-emerald-100">
-              <span className="font-bold">🎉 Excellent!</span> You&apos;re achieving high grid independence. Your system is well-optimized.
+              <span className="font-bold">🎉 Perfect Optimization!</span> You&apos;re capturing {summary.freePowerCaptured.toFixed(1)} kWh of free power during 11am-2pm and achieving {summary.gridIndependence.toFixed(1)}% independence from paid grid imports.
+            </div>
+          )}
+          
+          {summary.freePowerCaptured < 10 && hasAnyLoadShifting && (
+            <div className="bg-amber-500/20 border border-amber-500/50 rounded-xl p-4 text-amber-100">
+              <span className="font-bold">💡 Optimize Free Power:</span> You&apos;re only capturing {summary.freePowerCaptured.toFixed(1)} kWh during the free window. Consider adding more devices to the "11:00 AM Stack" (EV, Pool, Hot Water) to maximize free electricity usage.
             </div>
           )}
           
           {!hasAnyLoadShifting && (
+            <div className="bg-red-500/20 border border-red-500/50 rounded-xl p-4 text-red-100">
+              <span className="font-bold">⚠️ Missing Free Power!</span> You&apos;re not using the 11am-2pm free window. Enable devices in the "11:00 AM Stack" section above to capture up to 15 kWh/day of FREE electricity and save ${(summary.paidGridImport * PEAK_RATE).toFixed(0)}/day!
+            </div>
+          )}
+
+          {summary.peakPaidGridUsage > 5 && (
             <div className="bg-amber-500/20 border border-amber-500/50 rounded-xl p-4 text-amber-100">
-              <span className="font-bold">💡 Pro Tip:</span> Enable load shifting in the "11:00 AM Stack" section above to move Pool/EV/Hot Water to the 11am-2pm free window and save ${(summary.totalGridImport * PEAK_RATE).toFixed(0)}/day!
+              <span className="font-bold">🔌 High Paid Grid Usage:</span> Peak paid import is {summary.peakPaidGridUsage.toFixed(2)} kW. Shift more loads to the free window or increase battery capacity to reduce expensive grid imports.
             </div>
           )}
 
@@ -408,25 +429,17 @@ export const EnergySimulator = (props: EnergySimulatorProps = {}) => {
               </div>
             </div>
           )}
-
-          {summary.wastedSolar > 15 && (
-            <div className="bg-orange-500/20 border border-orange-500/50 rounded-xl p-4 text-orange-100">
-              <span className="font-bold">☀️ Solar Clipping:</span> You&apos;re exporting {summary.wastedSolar.toFixed(1)} kWh/day. 
-              Consider a larger battery or more load shifting to capture this energy.
-            </div>
-          )}
-
-          {strategy === 'ovo' && summary.gridIndependence < 50 && (
-            <div className="bg-purple-500/20 border border-purple-500/50 rounded-xl p-4 text-purple-100">
-              <span className="font-bold">🔋 Battery Size:</span> Your battery might be too small for OVO arbitrage. 
-              Consider upgrading to at least 15 kWh to maximize savings.
+          
+          {summary.wastedSolar > 20 && (
+            <div className="bg-amber-500/20 border border-amber-500/50 rounded-xl p-4 text-amber-100">
+              <span className="font-bold">☀️ Solar Clipping:</span> You&apos;re exporting {summary.wastedSolar.toFixed(1)} kWh/day. Consider a larger battery or shifting more loads to the free window to capture this energy.
             </div>
           )}
         </div>
 
         {/* Daily Summary Stats */}
         <div className="mt-6 pt-6 border-t border-white/20">
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
+          <div className="grid grid-cols-2 md:grid-cols-5 gap-4 text-sm">
             <div>
               <div className="text-slate-400 mb-1">Total Solar</div>
               <div className="text-white font-medium">{summary.totalSolar.toFixed(1)} kWh</div>
@@ -436,8 +449,12 @@ export const EnergySimulator = (props: EnergySimulatorProps = {}) => {
               <div className="text-white font-medium">{summary.totalConsumption.toFixed(1)} kWh</div>
             </div>
             <div>
-              <div className="text-slate-400 mb-1">Grid Import</div>
-              <div className="text-white font-medium">{summary.totalGridImport.toFixed(1)} kWh</div>
+              <div className="text-emerald-400 mb-1 font-medium">Free Import</div>
+              <div className="text-emerald-200 font-bold">{summary.freeGridImport.toFixed(1)} kWh</div>
+            </div>
+            <div>
+              <div className="text-red-400 mb-1 font-medium">Paid Import</div>
+              <div className="text-red-200 font-bold">{summary.paidGridImport.toFixed(1)} kWh</div>
             </div>
             <div>
               <div className="text-slate-400 mb-1">Grid Export</div>
