@@ -3,6 +3,9 @@ import { Tooltip } from './Tooltip';
 // Estimation prefix for compliance with ACL s18
 const ESTIMATION_PREFIX = '~';
 
+// Upfront cost constants (2026 estimates)
+const REVERSE_CYCLE_INSTALL_COST = 5500; // Mid-range split system installation
+
 interface ROITableProps {
   results: {
     batSavings: number;
@@ -96,7 +99,7 @@ export const ROITable = ({ results }: ROITableProps) => {
     {
       name: 'Reverse Cycle Heating',
       cost: results.heatingSavings > 0 
-        ? (results.currentHeatingType === 'rc' ? 0 : 5500) // $0 if already have RC, else $5500 for new system
+        ? (results.currentHeatingType === 'rc' ? 0 : REVERSE_CYCLE_INSTALL_COST)
         : 0,
       liability: results.liabilityCosts.heating,
       saving: results.heatingSavings,
