@@ -8,6 +8,7 @@ import { ReferralLinks } from './components/ReferralLinks';
 import { DisclaimerModal } from './components/DisclaimerModal';
 import { LoadGauge } from './components/LoadGauge';
 import { CurrentHardwareCard } from './components/CurrentHardwareCard';
+import { EnergySimulator } from './components/EnergySimulator';
 import { Zap } from 'lucide-react';
 import { useState } from 'react';
 
@@ -115,6 +116,11 @@ function App() {
               </p>
               <CostGraph results={results} />
             </div>
+          )}
+
+          {/* 24-Hour Energy Simulator */}
+          {hasAcceptedDisclaimer && (
+            <EnergySimulator />
           )}
 
           {/* Referral Links */}
