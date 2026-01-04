@@ -9,10 +9,31 @@ const PEAK_RATE = 0.58; // OVO Peak 4pm-9pm
 interface EnergySimulatorProps {
   solarSystemKw?: number;
   batteryKwh?: number;
+  strategies?: {
+    chargeEvInWindow: boolean;
+    chargeBatInWindow: boolean;
+    runPoolInWindow: boolean;
+    runHotWaterInWindow: boolean;
+  };
+  isEV?: boolean;
+  isHeatPump?: boolean;
+  hasPool?: boolean;
 }
 
 export const EnergySimulator = (props: EnergySimulatorProps = {}) => {
-  const { solarSystemKw: propSolarSize, batteryKwh: propBatterySize } = props;
+  const { 
+    solarSystemKw: propSolarSize, 
+    batteryKwh: propBatterySize,
+    strategies = {
+      chargeEvInWindow: false,
+      chargeBatInWindow: false,
+      runPoolInWindow: false,
+      runHotWaterInWindow: false,
+    },
+    isEV = false,
+    isHeatPump = false,
+    hasPool = false,
+  } = props;
   
   // Use props if provided, otherwise use local state
   const [localSolarSystemKw, setLocalSolarSystemKw] = useState(propSolarSize ?? 6.6);
@@ -23,10 +44,12 @@ export const EnergySimulator = (props: EnergySimulatorProps = {}) => {
   
   const [heatingStart, setHeatingStart] = useState(17);
   const [heatingEnd, setHeatingEnd] = useState(22);
-  const [loadShifting, setLoadShifting] = useState(true); // Default to smart load shifting
   const [season, setSeason] = useState<'Summer' | 'Winter'>('Summer');
   const [strategy, setStrategy] = useState<'standard' | 'ovo'>('ovo');
   const [insulation, setInsulation] = useState<'Sealed' | 'Leaky'>('Sealed');
+
+  // Calculate if any loads are being shifted
+  const hasAnyLoadShifting = strategies.chargeEvInWindow || strategies.chargeBatInWindow || strategies.runPoolInWindow || strategies.runHotWaterInWindow;
 
   // Generate simulation data
   const hourlyData = useMemo(() => {
@@ -34,12 +57,12 @@ export const EnergySimulator = (props: EnergySimulatorProps = {}) => {
       solarSystemKw,
       batteryKwh,
       heatingSchedule: { start: heatingStart, end: heatingEnd },
-      loadShifting,
+      loadShifting: hasAnyLoadShifting,
       season,
       strategy,
       insulation,
     });
-  }, [solarSystemKw, batteryKwh, heatingStart, heatingEnd, loadShifting, season, strategy, insulation]);
+  }, [solarSystemKw, batteryKwh, heatingStart, heatingEnd, hasAnyLoadShifting, season, strategy, insulation]);
 
   // Calculate summary stats
   const summary = useMemo(() => {
@@ -212,30 +235,54 @@ export const EnergySimulator = (props: EnergySimulatorProps = {}) => {
               </div>
             </div>
 
-            {/* Load Shifting Toggle */}
+            {/* Load Shifting Status Display */}
             <div>
               <label className="flex items-center text-sm font-medium text-slate-700 mb-2">
                 <Zap className="w-4 h-4 mr-2 text-blue-500" />
-                Load Shifting Strategy
+                Loads Shifted to 11am-2pm Free Window
               </label>
-              <button
-                onClick={() => setLoadShifting(!loadShifting)}
-                className={`w-full py-3 px-4 rounded-lg font-medium transition-all ${
-                  loadShifting
-                    ? 'bg-emerald-500 text-white shadow-lg'
-                    : 'bg-red-100 text-red-800 border-2 border-red-300'
-                }`}
-              >
-                {loadShifting ? (
-                  <span className="flex items-center justify-center gap-2">
-                    ✅ Smart: Pool/EV/HW run at 11am (Free!)
-                  </span>
+              <div className="p-4 bg-slate-50 rounded-lg border border-slate-200">
+                {hasAnyLoadShifting ? (
+                  <div className="space-y-2">
+                    <p className="text-sm font-medium text-emerald-700 mb-2">
+                      ✅ Smart Load Shifting Active
+                    </p>
+                    <div className="space-y-1 text-xs text-slate-600">
+                      {strategies.chargeEvInWindow && isEV && (
+                        <div className="flex items-center gap-2">
+                          <span className="w-2 h-2 bg-emerald-500 rounded-full"></span>
+                          <span>EV Charging (7.0 kW)</span>
+                        </div>
+                      )}
+                      {strategies.chargeBatInWindow && batteryKwh > 0 && (
+                        <div className="flex items-center gap-2">
+                          <span className="w-2 h-2 bg-emerald-500 rounded-full"></span>
+                          <span>Battery Charging (5.0 kW)</span>
+                        </div>
+                      )}
+                      {strategies.runPoolInWindow && hasPool && (
+                        <div className="flex items-center gap-2">
+                          <span className="w-2 h-2 bg-emerald-500 rounded-full"></span>
+                          <span>Pool Pump (1.5 kW)</span>
+                        </div>
+                      )}
+                      {strategies.runHotWaterInWindow && isHeatPump && (
+                        <div className="flex items-center gap-2">
+                          <span className="w-2 h-2 bg-emerald-500 rounded-full"></span>
+                          <span>Hot Water (1.0 kW)</span>
+                        </div>
+                      )}
+                    </div>
+                  </div>
                 ) : (
-                  <span className="flex items-center justify-center gap-2">
-                    ⚠️ Lazy: Pool/EV/HW run at 7pm (Expensive!)
-                  </span>
+                  <div className="text-sm text-red-700">
+                    <p className="font-medium mb-1">⚠️ No Load Shifting</p>
+                    <p className="text-xs text-slate-600">
+                      Configure loads in the "11:00 AM Stack" section above to take advantage of the free electricity window.
+                    </p>
+                  </div>
                 )}
-              </button>
+              </div>
             </div>
 
             {/* Insulation Quality */}
@@ -344,9 +391,9 @@ export const EnergySimulator = (props: EnergySimulatorProps = {}) => {
             </div>
           )}
           
-          {!loadShifting && (
+          {!hasAnyLoadShifting && (
             <div className="bg-amber-500/20 border border-amber-500/50 rounded-xl p-4 text-amber-100">
-              <span className="font-bold">💡 Pro Tip:</span> Enable Load Shifting to move Pool/EV/Hot Water to the 11am-2pm free window and save ${(summary.totalGridImport * PEAK_RATE).toFixed(0)}/day!
+              <span className="font-bold">💡 Pro Tip:</span> Enable load shifting in the "11:00 AM Stack" section above to move Pool/EV/Hot Water to the 11am-2pm free window and save ${(summary.totalGridImport * PEAK_RATE).toFixed(0)}/day!
             </div>
           )}
 

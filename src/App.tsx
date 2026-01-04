@@ -98,6 +98,10 @@ function App() {
             <EnergySimulator 
               solarSystemKw={state.solarSize}
               batteryKwh={state.batterySize}
+              strategies={state.strategies}
+              isEV={state.isEV}
+              isHeatPump={state.isHeatPump}
+              hasPool={state.hasPool}
             />
           )}
 
