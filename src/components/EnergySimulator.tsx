@@ -11,10 +11,12 @@ interface EnergySimulatorProps {
   batteryKwh?: number;
 }
 
-export const EnergySimulator = ({ solarSystemKw: propSolarSize, batteryKwh: propBatterySize }: EnergySimulatorProps = {}) => {
+export const EnergySimulator = (props: EnergySimulatorProps = {}) => {
+  const { solarSystemKw: propSolarSize, batteryKwh: propBatterySize } = props;
+  
   // Use props if provided, otherwise use local state
-  const [localSolarSystemKw, setLocalSolarSystemKw] = useState(propSolarSize || 6.6);
-  const [localBatteryKwh, setLocalBatteryKwh] = useState(propBatterySize || 13.5);
+  const [localSolarSystemKw, setLocalSolarSystemKw] = useState(propSolarSize ?? 6.6);
+  const [localBatteryKwh, setLocalBatteryKwh] = useState(propBatterySize ?? 13.5);
   
   const solarSystemKw = propSolarSize !== undefined ? propSolarSize : localSolarSystemKw;
   const batteryKwh = propBatterySize !== undefined ? propBatterySize : localBatteryKwh;
