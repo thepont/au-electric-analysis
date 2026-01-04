@@ -6,7 +6,7 @@ import { CostGraph } from './components/CostGraph';
 import { ReferralLinks } from './components/ReferralLinks';
 import { DisclaimerModal } from './components/DisclaimerModal';
 import { LoadGauge } from './components/LoadGauge';
-import { CurrentHardwareCard } from './components/CurrentHardwareCard';
+import { ApplianceConfiguration } from './components/ApplianceConfiguration';
 import { EnergySimulator } from './components/EnergySimulator';
 import { Zap } from 'lucide-react';
 import { useState } from 'react';
@@ -48,16 +48,13 @@ function App() {
             <InputSliders state={state} updateState={updateState} />
           </div>
 
-          {/* Current Hardware Card */}
+          {/* Appliance Configuration - Grouped by appliance */}
           <div className="bg-white rounded-[2.5rem] shadow-sm border border-slate-200 p-8">
             <h2 className="text-2xl font-semibold text-slate-900 tracking-tighter mb-4 flex items-center">
               <span className="w-2 h-8 bg-purple-600 rounded mr-3"></span>
-              Current Hardware
+              Appliance Strategy
             </h2>
-            <CurrentHardwareCard
-              currentSetup={state.currentSetup}
-              updateSetup={(updates) => updateState({ currentSetup: { ...state.currentSetup, ...updates } })}
-            />
+            <ApplianceConfiguration state={state} updateState={updateState} />
             
             {/* Room Count Configuration */}
             <div className="mt-6 pt-6 border-t border-gray-200">

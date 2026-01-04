@@ -1,0 +1,518 @@
+import { Droplet, Flame, Zap, Waves, Wind, Car, Battery } from 'lucide-react';
+
+interface ApplianceConfigurationProps {
+  state: {
+    currentSetup: {
+      hotWater: 'gas' | 'resistive' | 'heatpump';
+      heating: 'gas' | 'resistive' | 'rc' | 'none';
+      cooking: 'gas' | 'induction';
+      pool: 'none' | 'single_speed' | 'variable_speed';
+      dryer: 'vented' | 'heatpump';
+    };
+    isEV: boolean;
+    isV2H: boolean;
+    isHeatPump: boolean;
+    isInduction: boolean;
+    hasPool: boolean;
+    strategies: {
+      chargeEvInWindow: boolean;
+      chargeBatInWindow: boolean;
+      runHotWaterInWindow: boolean;
+      runPoolInWindow: boolean;
+    };
+    batterySize: number;
+  };
+  updateState: (newState: any) => void;
+}
+
+export const ApplianceConfiguration = ({ state, updateState }: ApplianceConfigurationProps) => {
+  return (
+    <div className="space-y-6">
+      <div className="mb-4">
+        <h3 className="text-lg font-semibold text-slate-900 tracking-tighter mb-2">Appliance Configuration</h3>
+        <p className="text-sm text-slate-600">
+          For each appliance, tell us what you have now, if you're planning to upgrade, and if you want to shift the load to the free window.
+        </p>
+      </div>
+
+      {/* Electric Vehicle */}
+      <div className="bg-slate-50 rounded-xl p-5 border border-slate-200">
+        <div className="flex items-center space-x-2 mb-4">
+          <Car className="w-5 h-5 text-emerald-600" />
+          <h4 className="font-semibold text-slate-900">Electric Vehicle</h4>
+        </div>
+        
+        <div className="grid md:grid-cols-3 gap-4">
+          {/* What do you have now? */}
+          <div>
+            <label className="block text-xs font-medium text-slate-600 mb-2 uppercase tracking-wider">
+              What do you have now?
+            </label>
+            <button
+              onClick={() => updateState({ isEV: !state.isEV })}
+              className={`w-full px-4 py-2 rounded-lg border-2 transition-all text-sm font-medium ${
+                state.isEV
+                  ? 'border-emerald-500 bg-emerald-50 text-emerald-700'
+                  : 'border-gray-300 bg-white text-gray-700 hover:border-gray-400'
+              }`}
+            >
+              {state.isEV ? '✓ Have Electric Vehicle' : 'No EV Yet'}
+            </button>
+          </div>
+
+          {/* Do you plan to upgrade? */}
+          <div>
+            <label className="block text-xs font-medium text-slate-600 mb-2 uppercase tracking-wider">
+              V2H (Vehicle-to-Home)?
+            </label>
+            <button
+              onClick={() => updateState({ isV2H: !state.isV2H })}
+              disabled={!state.isEV}
+              className={`w-full px-4 py-2 rounded-lg border-2 transition-all text-sm font-medium ${
+                state.isV2H
+                  ? 'border-blue-500 bg-blue-50 text-blue-700'
+                  : state.isEV
+                  ? 'border-gray-300 bg-white text-gray-700 hover:border-gray-400'
+                  : 'border-gray-200 bg-gray-100 text-gray-400 cursor-not-allowed'
+              }`}
+            >
+              {state.isV2H ? '✓ Yes, V2H (60 kWh)' : 'No V2H'}
+            </button>
+            {!state.isEV && (
+              <p className="text-xs text-gray-500 mt-1">Requires EV first</p>
+            )}
+          </div>
+
+          {/* Do you plan to shift the load? */}
+          <div>
+            <label className="block text-xs font-medium text-slate-600 mb-2 uppercase tracking-wider">
+              Charge during 11am-2pm?
+            </label>
+            <button
+              onClick={() => updateState({ 
+                strategies: { 
+                  ...state.strategies, 
+                  chargeEvInWindow: !state.strategies.chargeEvInWindow 
+                } 
+              })}
+              disabled={!state.isEV}
+              className={`w-full px-4 py-2 rounded-lg border-2 transition-all text-sm font-medium ${
+                state.strategies.chargeEvInWindow
+                  ? 'border-emerald-500 bg-emerald-50 text-emerald-700'
+                  : state.isEV
+                  ? 'border-gray-300 bg-white text-gray-700 hover:border-gray-400'
+                  : 'border-gray-200 bg-gray-100 text-gray-400 cursor-not-allowed'
+              }`}
+            >
+              {state.strategies.chargeEvInWindow 
+                ? '✓ Yes, Charge Free (7.0 kW)' 
+                : 'No Free Charging'}
+            </button>
+            {!state.isEV && (
+              <p className="text-xs text-gray-500 mt-1">Requires EV</p>
+            )}
+          </div>
+        </div>
+      </div>
+
+      {/* Battery Storage */}
+      <div className="bg-slate-50 rounded-xl p-5 border border-slate-200">
+        <div className="flex items-center space-x-2 mb-4">
+          <Battery className="w-5 h-5 text-blue-600" />
+          <h4 className="font-semibold text-slate-900">Battery Storage</h4>
+        </div>
+        
+        <div className="grid md:grid-cols-3 gap-4">
+          {/* What do you have now? */}
+          <div>
+            <label className="block text-xs font-medium text-slate-600 mb-2 uppercase tracking-wider">
+              What do you have now?
+            </label>
+            <div className="text-sm text-gray-600 px-4 py-2 bg-white border border-gray-300 rounded-lg">
+              {state.batterySize > 0 
+                ? `${state.batterySize} kWh Battery` 
+                : state.isV2H
+                ? 'Using V2H (60 kWh)'
+                : 'No Battery'}
+            </div>
+            <p className="text-xs text-gray-500 mt-1">Configure in "Your Energy Setup" above</p>
+          </div>
+
+          {/* Do you plan to upgrade? */}
+          <div>
+            <label className="block text-xs font-medium text-slate-600 mb-2 uppercase tracking-wider">
+              Plan to upgrade?
+            </label>
+            <div className="text-sm text-gray-600 px-4 py-2 bg-white border border-gray-300 rounded-lg">
+              Calculated in ROI table
+            </div>
+          </div>
+
+          {/* Do you plan to shift the load? */}
+          <div>
+            <label className="block text-xs font-medium text-slate-600 mb-2 uppercase tracking-wider">
+              Charge during 11am-2pm?
+            </label>
+            <button
+              onClick={() => updateState({ 
+                strategies: { 
+                  ...state.strategies, 
+                  chargeBatInWindow: !state.strategies.chargeBatInWindow 
+                } 
+              })}
+              disabled={state.batterySize === 0 && !state.isV2H}
+              className={`w-full px-4 py-2 rounded-lg border-2 transition-all text-sm font-medium ${
+                state.strategies.chargeBatInWindow
+                  ? 'border-emerald-500 bg-emerald-50 text-emerald-700'
+                  : (state.batterySize > 0 || state.isV2H)
+                  ? 'border-gray-300 bg-white text-gray-700 hover:border-gray-400'
+                  : 'border-gray-200 bg-gray-100 text-gray-400 cursor-not-allowed'
+              }`}
+            >
+              {state.strategies.chargeBatInWindow 
+                ? '✓ Yes, Charge Free (5.0 kW)' 
+                : 'No Free Charging'}
+            </button>
+            {(state.batterySize === 0 && !state.isV2H) && (
+              <p className="text-xs text-gray-500 mt-1">Requires battery</p>
+            )}
+          </div>
+        </div>
+      </div>
+
+      {/* Hot Water */}
+      <div className="bg-slate-50 rounded-xl p-5 border border-slate-200">
+        <div className="flex items-center space-x-2 mb-4">
+          <Droplet className="w-5 h-5 text-blue-600" />
+          <h4 className="font-semibold text-slate-900">Hot Water</h4>
+        </div>
+        
+        <div className="grid md:grid-cols-3 gap-4">
+          {/* What do you have now? */}
+          <div>
+            <label className="block text-xs font-medium text-slate-600 mb-2 uppercase tracking-wider">
+              What do you have now?
+            </label>
+            <select
+              value={state.currentSetup.hotWater}
+              onChange={(e) => updateState({ 
+                currentSetup: { 
+                  ...state.currentSetup, 
+                  hotWater: e.target.value as 'gas' | 'resistive' | 'heatpump'
+                } 
+              })}
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+            >
+              <option value="gas">Gas Hot Water</option>
+              <option value="resistive">Electric Resistive</option>
+              <option value="heatpump">Heat Pump (upgraded)</option>
+            </select>
+          </div>
+
+          {/* Do you plan to upgrade? */}
+          <div>
+            <label className="block text-xs font-medium text-slate-600 mb-2 uppercase tracking-wider">
+              Plan to upgrade?
+            </label>
+            <button
+              onClick={() => updateState({ isHeatPump: !state.isHeatPump })}
+              disabled={state.currentSetup.hotWater === 'heatpump'}
+              className={`w-full px-4 py-2 rounded-lg border-2 transition-all text-sm font-medium ${
+                state.isHeatPump
+                  ? 'border-amber-500 bg-amber-50 text-amber-700'
+                  : state.currentSetup.hotWater === 'heatpump'
+                  ? 'border-gray-200 bg-gray-100 text-gray-400 cursor-not-allowed'
+                  : 'border-gray-300 bg-white text-gray-700 hover:border-gray-400'
+              }`}
+            >
+              {state.currentSetup.hotWater === 'heatpump' 
+                ? '✓ Already Upgraded' 
+                : state.isHeatPump 
+                ? '✓ Yes, Upgrade to Heat Pump' 
+                : 'No Upgrade'}
+            </button>
+          </div>
+
+          {/* Do you plan to shift the load? */}
+          <div>
+            <label className="block text-xs font-medium text-slate-600 mb-2 uppercase tracking-wider">
+              Shift load to 11am-2pm?
+            </label>
+            <button
+              onClick={() => updateState({ 
+                strategies: { 
+                  ...state.strategies, 
+                  runHotWaterInWindow: !state.strategies.runHotWaterInWindow 
+                } 
+              })}
+              disabled={state.currentSetup.hotWater !== 'heatpump' && !state.isHeatPump}
+              className={`w-full px-4 py-2 rounded-lg border-2 transition-all text-sm font-medium ${
+                state.strategies.runHotWaterInWindow
+                  ? 'border-emerald-500 bg-emerald-50 text-emerald-700'
+                  : (state.currentSetup.hotWater === 'heatpump' || state.isHeatPump)
+                  ? 'border-gray-300 bg-white text-gray-700 hover:border-gray-400'
+                  : 'border-gray-200 bg-gray-100 text-gray-400 cursor-not-allowed'
+              }`}
+            >
+              {state.strategies.runHotWaterInWindow 
+                ? '✓ Yes, Shift Load (1.0 kW)' 
+                : 'No Load Shifting'}
+            </button>
+            {(state.currentSetup.hotWater !== 'heatpump' && !state.isHeatPump) && (
+              <p className="text-xs text-gray-500 mt-1">Requires heat pump</p>
+            )}
+          </div>
+        </div>
+      </div>
+
+      {/* Heating */}
+      <div className="bg-slate-50 rounded-xl p-5 border border-slate-200">
+        <div className="flex items-center space-x-2 mb-4">
+          <Flame className="w-5 h-5 text-orange-600" />
+          <h4 className="font-semibold text-slate-900">Heating</h4>
+        </div>
+        
+        <div className="grid md:grid-cols-3 gap-4">
+          {/* What do you have now? */}
+          <div>
+            <label className="block text-xs font-medium text-slate-600 mb-2 uppercase tracking-wider">
+              What do you have now?
+            </label>
+            <select
+              value={state.currentSetup.heating}
+              onChange={(e) => updateState({ 
+                currentSetup: { 
+                  ...state.currentSetup, 
+                  heating: e.target.value as 'gas' | 'resistive' | 'rc' | 'none'
+                } 
+              })}
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+            >
+              <option value="gas">Gas Ducted</option>
+              <option value="resistive">Electric Resistive</option>
+              <option value="rc">Reverse Cycle (upgraded)</option>
+              <option value="none">No Heating</option>
+            </select>
+          </div>
+
+          {/* Do you plan to upgrade? */}
+          <div>
+            <label className="block text-xs font-medium text-slate-600 mb-2 uppercase tracking-wider">
+              Plan to upgrade?
+            </label>
+            <div className="text-sm text-gray-600 px-4 py-2 bg-white border border-gray-300 rounded-lg">
+              {state.currentSetup.heating === 'rc' 
+                ? '✓ Already have Reverse Cycle' 
+                : 'Calculated in ROI table'}
+            </div>
+          </div>
+
+          {/* Do you plan to shift the load? */}
+          <div>
+            <label className="block text-xs font-medium text-slate-600 mb-2 uppercase tracking-wider">
+              Shift load to 11am-2pm?
+            </label>
+            <div className="text-sm text-gray-600 px-4 py-2 bg-white border border-gray-300 rounded-lg">
+              Pre-heat during free window
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Cooking */}
+      <div className="bg-slate-50 rounded-xl p-5 border border-slate-200">
+        <div className="flex items-center space-x-2 mb-4">
+          <Zap className="w-5 h-5 text-purple-600" />
+          <h4 className="font-semibold text-slate-900">Cooking</h4>
+        </div>
+        
+        <div className="grid md:grid-cols-3 gap-4">
+          {/* What do you have now? */}
+          <div>
+            <label className="block text-xs font-medium text-slate-600 mb-2 uppercase tracking-wider">
+              What do you have now?
+            </label>
+            <select
+              value={state.currentSetup.cooking}
+              onChange={(e) => updateState({ 
+                currentSetup: { 
+                  ...state.currentSetup, 
+                  cooking: e.target.value as 'gas' | 'induction'
+                } 
+              })}
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+            >
+              <option value="gas">Gas Cooktop</option>
+              <option value="induction">Induction (upgraded)</option>
+            </select>
+          </div>
+
+          {/* Do you plan to upgrade? */}
+          <div>
+            <label className="block text-xs font-medium text-slate-600 mb-2 uppercase tracking-wider">
+              Plan to upgrade?
+            </label>
+            <button
+              onClick={() => updateState({ isInduction: !state.isInduction })}
+              disabled={state.currentSetup.cooking === 'induction'}
+              className={`w-full px-4 py-2 rounded-lg border-2 transition-all text-sm font-medium ${
+                state.isInduction
+                  ? 'border-purple-500 bg-purple-50 text-purple-700'
+                  : state.currentSetup.cooking === 'induction'
+                  ? 'border-gray-200 bg-gray-100 text-gray-400 cursor-not-allowed'
+                  : 'border-gray-300 bg-white text-gray-700 hover:border-gray-400'
+              }`}
+            >
+              {state.currentSetup.cooking === 'induction' 
+                ? '✓ Already Upgraded' 
+                : state.isInduction 
+                ? '✓ Yes, Upgrade to Induction' 
+                : 'No Upgrade'}
+            </button>
+          </div>
+
+          {/* Do you plan to shift the load? */}
+          <div>
+            <label className="block text-xs font-medium text-slate-600 mb-2 uppercase tracking-wider">
+              Shift load to 11am-2pm?
+            </label>
+            <div className="text-sm text-gray-600 px-4 py-2 bg-white border border-gray-300 rounded-lg">
+              N/A - On-demand use
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Pool Pump */}
+      <div className="bg-slate-50 rounded-xl p-5 border border-slate-200">
+        <div className="flex items-center space-x-2 mb-4">
+          <Waves className="w-5 h-5 text-cyan-600" />
+          <h4 className="font-semibold text-slate-900">Pool Pump</h4>
+        </div>
+        
+        <div className="grid md:grid-cols-3 gap-4">
+          {/* What do you have now? */}
+          <div>
+            <label className="block text-xs font-medium text-slate-600 mb-2 uppercase tracking-wider">
+              What do you have now?
+            </label>
+            <select
+              value={state.currentSetup.pool}
+              onChange={(e) => {
+                const newValue = e.target.value as 'none' | 'single_speed' | 'variable_speed';
+                updateState({ 
+                  currentSetup: { 
+                    ...state.currentSetup, 
+                    pool: newValue
+                  },
+                  hasPool: newValue !== 'none'
+                });
+              }}
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-cyan-500 focus:border-transparent"
+            >
+              <option value="none">No Pool</option>
+              <option value="single_speed">Single Speed Pump</option>
+              <option value="variable_speed">Variable Speed (upgraded)</option>
+            </select>
+          </div>
+
+          {/* Do you plan to upgrade? */}
+          <div>
+            <label className="block text-xs font-medium text-slate-600 mb-2 uppercase tracking-wider">
+              Plan to upgrade?
+            </label>
+            <div className="text-sm text-gray-600 px-4 py-2 bg-white border border-gray-300 rounded-lg">
+              {state.currentSetup.pool === 'none' 
+                ? 'No pool' 
+                : state.currentSetup.pool === 'variable_speed'
+                ? '✓ Already variable speed'
+                : 'Calculated in ROI table'}
+            </div>
+          </div>
+
+          {/* Do you plan to shift the load? */}
+          <div>
+            <label className="block text-xs font-medium text-slate-600 mb-2 uppercase tracking-wider">
+              Shift load to 11am-2pm?
+            </label>
+            <button
+              onClick={() => updateState({ 
+                strategies: { 
+                  ...state.strategies, 
+                  runPoolInWindow: !state.strategies.runPoolInWindow 
+                } 
+              })}
+              disabled={!state.hasPool}
+              className={`w-full px-4 py-2 rounded-lg border-2 transition-all text-sm font-medium ${
+                state.strategies.runPoolInWindow
+                  ? 'border-emerald-500 bg-emerald-50 text-emerald-700'
+                  : state.hasPool
+                  ? 'border-gray-300 bg-white text-gray-700 hover:border-gray-400'
+                  : 'border-gray-200 bg-gray-100 text-gray-400 cursor-not-allowed'
+              }`}
+            >
+              {state.strategies.runPoolInWindow 
+                ? '✓ Yes, Shift Load (1.5 kW)' 
+                : 'No Load Shifting'}
+            </button>
+            {!state.hasPool && (
+              <p className="text-xs text-gray-500 mt-1">No pool configured</p>
+            )}
+          </div>
+        </div>
+      </div>
+
+      {/* Dryer */}
+      <div className="bg-slate-50 rounded-xl p-5 border border-slate-200">
+        <div className="flex items-center space-x-2 mb-4">
+          <Wind className="w-5 h-5 text-indigo-600" />
+          <h4 className="font-semibold text-slate-900">Clothes Dryer</h4>
+        </div>
+        
+        <div className="grid md:grid-cols-3 gap-4">
+          {/* What do you have now? */}
+          <div>
+            <label className="block text-xs font-medium text-slate-600 mb-2 uppercase tracking-wider">
+              What do you have now?
+            </label>
+            <select
+              value={state.currentSetup.dryer}
+              onChange={(e) => updateState({ 
+                currentSetup: { 
+                  ...state.currentSetup, 
+                  dryer: e.target.value as 'vented' | 'heatpump'
+                } 
+              })}
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+            >
+              <option value="vented">Vented Dryer</option>
+              <option value="heatpump">Heat Pump (upgraded)</option>
+            </select>
+          </div>
+
+          {/* Do you plan to upgrade? */}
+          <div>
+            <label className="block text-xs font-medium text-slate-600 mb-2 uppercase tracking-wider">
+              Plan to upgrade?
+            </label>
+            <div className="text-sm text-gray-600 px-4 py-2 bg-white border border-gray-300 rounded-lg">
+              {state.currentSetup.dryer === 'heatpump' 
+                ? '✓ Already heat pump' 
+                : 'Calculated in ROI table'}
+            </div>
+          </div>
+
+          {/* Do you plan to shift the load? */}
+          <div>
+            <label className="block text-xs font-medium text-slate-600 mb-2 uppercase tracking-wider">
+              Shift load to 11am-2pm?
+            </label>
+            <div className="text-sm text-gray-600 px-4 py-2 bg-white border border-gray-300 rounded-lg">
+              N/A - Scheduled as needed
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+};
