@@ -77,6 +77,14 @@ interface EnergyResults {
     cooking: number;
     pool: number;
   };
+  // Waterfall breakdown
+  manualShiftSavings: number;
+  batteryArbitrageSavings: number;
+  // Gas breakdown
+  hotWaterSavings: number;
+  heatingSavings: number;
+  cookingSavings: number;
+  gasDisconnectionBonus: number;
 }
 
 export const useEnergyMath = (inputs: EnergyInputs): EnergyResults => {
@@ -313,7 +321,6 @@ export const useEnergyMath = (inputs: EnergyInputs): EnergyResults => {
     }
     
     const adjustedDailyKwh = dailyTotalKwh + gasElecShift;
-    const dailyPeakNeed = adjustedDailyKwh * 0.45; // 45% of usage is in expensive window
     
     // Service Fuse Constraint Calculations
     // Calculate Max Grid Draw (kW)
@@ -365,23 +372,64 @@ export const useEnergyMath = (inputs: EnergyInputs): EnergyResults => {
     const actualImportKwh = Math.min(requestedImportKwh, maxPossibleImportKwh);
     const wastedKwh = requestedImportKwh - actualImportKwh;
 
-    // The "Enabler" Formula (Battery/V2H)
-    const usableCapacity = isV2H ? 60 : batterySize;
-    const dailyShift = Math.min(usableCapacity, dailyPeakNeed);
+    // ========================================
+    // OVO WATERFALL CALCULATION
+    // ========================================
+    // Step 1: Calculate initial peak consumption (the "Enemy")
+    let peakConsumptionKwh = adjustedDailyKwh * 0.45; // 45% of usage is peak (4pm-9pm)
     
-    // Adjust battery savings for wasted kWh due to fuse constraint
-    // The logic: We want to shift energy usage to the free window (11am-2pm)
-    // If we can't import all the energy we need due to fuse limits, we lose that saving opportunity
-    // wastedKwh represents the daily kWh we wanted to import but couldn't
-    // Each wasted kWh means we have to buy it at peak rate instead of getting it free
+    // Step 2: Manual Load Shifting (Subtracts from Peak FIRST)
+    let manualShiftKwh = 0;
+    
+    // Pool pump timer hack (runs during free window instead of peak)
+    if (hasPool && strategies.runPoolInWindow && currentSetup.pool === 'single_speed') {
+      const poolDailyKwh = 1.5 * 8 / 24 * adjustedDailyKwh; // Estimate pool's contribution to daily load
+      const poolPeakKwh = Math.min(poolDailyKwh * 0.8, 4.0); // Assume 80% was in peak, max 4kWh
+      manualShiftKwh += poolPeakKwh;
+      peakConsumptionKwh -= poolPeakKwh;
+    }
+    
+    // Hot water timer hack (runs during free window instead of peak)
+    if (isHeatPump && strategies.runHotWaterInWindow) {
+      const hwDailyKwh = 3600 / 4.0 / 365; // Heat pump hot water: ~2.5kWh/day
+      const hwPeakKwh = Math.min(hwDailyKwh * 0.5, 3.0); // Assume 50% was in peak, max 3kWh
+      manualShiftKwh += hwPeakKwh;
+      peakConsumptionKwh -= hwPeakKwh;
+    }
+    
+    // Step 3: Data hygiene - ensure we didn't go below zero
+    peakConsumptionKwh = Math.max(0, peakConsumptionKwh);
+    
+    // Step 4: Calculate Manual Shift Savings
+    const manualShiftSavings = manualShiftKwh * PEAK_RATE * 365;
+    
+    // Step 5: Battery Arbitrage (Attacks REMAINING Peak only)
+    const usableCapacity = isV2H ? 60 : batterySize;
+    const batteryShiftKwh = Math.min(peakConsumptionKwh, usableCapacity);
+    
+    // Step 6: Calculate Battery Arbitrage Savings
+    // Include solar opportunity cost if we have solar
+    let solarOpportunityCost = 0;
+    if (solarSize > 0 && batterySize > 0 && strategies.chargeBatInWindow) {
+      // If charging during free window when solar is generating, we lose feed-in tariff
+      // Conservative estimate: 30% of battery charge comes from solar that could have been exported
+      solarOpportunityCost = batteryShiftKwh * 0.3 * FEED_IN * 365;
+    }
+    
+    // Adjust for wasted capacity due to fuse constraint
     const wastedValue = wastedKwh * (PEAK_RATE - FREE_WINDOW) * 365;
-    const batSavings = Math.max(0, dailyShift * (PEAK_RATE - FREE_WINDOW) * 365 - wastedValue);
+    const batteryArbitrageSavings = Math.max(0, 
+      batteryShiftKwh * (PEAK_RATE - FREE_WINDOW) * 365 - wastedValue - solarOpportunityCost
+    );
+    
+    // Step 7: Total Battery Savings (for backward compatibility)
+    const batSavings = manualShiftSavings + batteryArbitrageSavings;
 
     
     
     // Solar Formula with Export Clipping
     const solarGen = solarSize * 3.8 * 365;
-    const selfUse = Math.min(adjustedDailyKwh * 365 - dailyShift * 365, solarGen * 0.3);
+    const selfUse = Math.min(adjustedDailyKwh * 365 - batteryShiftKwh * 365, solarGen * 0.3);
     
     // Calculate export clipping loss
     let exportClippingLoss = 0;
@@ -484,6 +532,14 @@ export const useEnergyMath = (inputs: EnergyInputs): EnergyResults => {
         cooking: cookingLiability,
         pool: poolLiability,
       },
+      // Waterfall breakdown
+      manualShiftSavings,
+      batteryArbitrageSavings,
+      // Gas breakdown
+      hotWaterSavings,
+      heatingSavings,
+      cookingSavings,
+      gasDisconnectionBonus,
     };
   }, [
     inputs.bill,

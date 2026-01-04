@@ -1218,4 +1218,378 @@ describe('useEnergyMath', () => {
       });
     });
   });
+
+  describe('OVO Waterfall Calculation', () => {
+    describe('Manual Load Shifting (Step 1 of Waterfall)', () => {
+      it('should calculate pool timer manual shift savings', () => {
+        const inputs = {
+          bill: 3000,
+          gasBill: 0,
+          petrolBill: 0,
+          solarSize: 0,
+          batterySize: 0,
+          isEV: false,
+          isV2H: false,
+          isHeatPump: false,
+          isInduction: false,
+          hasGasHeating: false,
+          hasGasWater: false,
+          hasGasCooking: false,
+          hasOldDryer: false,
+          gridExportLimit: 5,
+          serviceFuse: 63,
+          hasPool: true,
+          strategies: {
+            chargeEvInWindow: false,
+            chargeBatInWindow: false,
+            runPoolInWindow: true, // Pool timer enabled
+            runHotWaterInWindow: false,
+          },
+          currentSetup: {
+            hotWater: 'resistive' as const,
+            heating: 'none' as const,
+            cooking: 'induction' as const,
+            pool: 'single_speed' as const,
+          },
+        };
+
+        const { result } = renderHook(() => useEnergyMath(inputs));
+
+        // Manual shift savings should be positive from pool timer
+        expect(result.current.manualShiftSavings).toBeGreaterThan(0);
+        
+        // Battery arbitrage should be zero (no battery)
+        expect(result.current.batteryArbitrageSavings).toBe(0);
+        
+        // Total batSavings should equal manual shift savings
+        expect(result.current.batSavings).toBe(result.current.manualShiftSavings);
+      });
+
+      it('should calculate hot water timer manual shift savings', () => {
+        const inputs = {
+          bill: 3000,
+          gasBill: 0,
+          petrolBill: 0,
+          solarSize: 0,
+          batterySize: 0,
+          isEV: false,
+          isV2H: false,
+          isHeatPump: true,
+          isInduction: false,
+          hasGasHeating: false,
+          hasGasWater: false,
+          hasGasCooking: false,
+          hasOldDryer: false,
+          gridExportLimit: 5,
+          serviceFuse: 63,
+          hasPool: false,
+          strategies: {
+            chargeEvInWindow: false,
+            chargeBatInWindow: false,
+            runPoolInWindow: false,
+            runHotWaterInWindow: true, // Hot water timer enabled
+          },
+          currentSetup: {
+            hotWater: 'resistive' as const,
+            heating: 'none' as const,
+            cooking: 'induction' as const,
+            pool: 'none' as const,
+          },
+        };
+
+        const { result } = renderHook(() => useEnergyMath(inputs));
+
+        // Manual shift savings should be positive from hot water timer
+        expect(result.current.manualShiftSavings).toBeGreaterThan(0);
+        
+        // Battery arbitrage should be zero (no battery)
+        expect(result.current.batteryArbitrageSavings).toBe(0);
+      });
+
+      it('should combine pool and hot water manual shifts', () => {
+        const inputs = {
+          bill: 3000,
+          gasBill: 0,
+          petrolBill: 0,
+          solarSize: 0,
+          batterySize: 0,
+          isEV: false,
+          isV2H: false,
+          isHeatPump: true,
+          isInduction: false,
+          hasGasHeating: false,
+          hasGasWater: false,
+          hasGasCooking: false,
+          hasOldDryer: false,
+          gridExportLimit: 5,
+          serviceFuse: 63,
+          hasPool: true,
+          strategies: {
+            chargeEvInWindow: false,
+            chargeBatInWindow: false,
+            runPoolInWindow: true, // Both enabled
+            runHotWaterInWindow: true,
+          },
+          currentSetup: {
+            hotWater: 'resistive' as const,
+            heating: 'none' as const,
+            cooking: 'induction' as const,
+            pool: 'single_speed' as const,
+          },
+        };
+
+        const { result: bothResult } = renderHook(() => useEnergyMath(inputs));
+
+        // Should have combined manual shift savings
+        expect(bothResult.current.manualShiftSavings).toBeGreaterThan(0);
+      });
+    });
+
+    describe('Battery Arbitrage (Step 2 of Waterfall)', () => {
+      it('should calculate battery arbitrage savings when no manual shifts', () => {
+        const inputs = {
+          bill: 3000,
+          gasBill: 0,
+          petrolBill: 0,
+          solarSize: 0,
+          batterySize: 13.5,
+          isEV: false,
+          isV2H: false,
+          isHeatPump: false,
+          isInduction: false,
+          hasGasHeating: false,
+          hasGasWater: false,
+          hasGasCooking: false,
+          hasOldDryer: false,
+          gridExportLimit: 5,
+          serviceFuse: 63,
+          hasPool: false,
+          strategies: {
+            chargeEvInWindow: false,
+            chargeBatInWindow: true, // Battery charging enabled
+            runPoolInWindow: false,
+            runHotWaterInWindow: false,
+          },
+          currentSetup: {
+            hotWater: 'resistive' as const,
+            heating: 'none' as const,
+            cooking: 'induction' as const,
+            pool: 'none' as const,
+          },
+        };
+
+        const { result } = renderHook(() => useEnergyMath(inputs));
+
+        // Manual shift should be zero (no timers enabled)
+        expect(result.current.manualShiftSavings).toBe(0);
+        
+        // Battery arbitrage should be positive
+        expect(result.current.batteryArbitrageSavings).toBeGreaterThan(0);
+        
+        // Total batSavings should equal battery arbitrage savings
+        expect(result.current.batSavings).toBe(result.current.batteryArbitrageSavings);
+      });
+
+      it('should reduce battery arbitrage opportunity when manual shifts are present (waterfall)', () => {
+        const inputs = {
+          bill: 3000,
+          gasBill: 0,
+          petrolBill: 0,
+          solarSize: 0,
+          batterySize: 13.5,
+          isEV: false,
+          isV2H: false,
+          isHeatPump: true,
+          isInduction: false,
+          hasGasHeating: false,
+          hasGasWater: false,
+          hasGasCooking: false,
+          hasOldDryer: false,
+          gridExportLimit: 5,
+          serviceFuse: 63,
+          hasPool: true,
+          strategies: {
+            chargeEvInWindow: false,
+            chargeBatInWindow: true,
+            runPoolInWindow: false, // Manual shifts disabled
+            runHotWaterInWindow: false,
+          },
+          currentSetup: {
+            hotWater: 'resistive' as const,
+            heating: 'none' as const,
+            cooking: 'induction' as const,
+            pool: 'single_speed' as const,
+          },
+        };
+
+        // Test 1: Battery only (no manual shifts)
+        const { result: batteryOnly } = renderHook(() => useEnergyMath(inputs));
+        const batteryOnlyArbitrage = batteryOnly.current.batteryArbitrageSavings;
+
+        // Test 2: Battery + Manual shifts (pool timer enabled)
+        const inputsWithManualShift = {
+          ...inputs,
+          strategies: {
+            ...inputs.strategies,
+            runPoolInWindow: true, // Enable pool timer
+          },
+        };
+        const { result: batteryWithManual } = renderHook(() => useEnergyMath(inputsWithManualShift));
+
+        // Battery arbitrage should be LOWER when manual shifts are present
+        // because manual shifts reduce the peak load first, leaving less for battery
+        expect(batteryWithManual.current.batteryArbitrageSavings).toBeLessThan(batteryOnlyArbitrage);
+        
+        // Manual shift savings should be positive
+        expect(batteryWithManual.current.manualShiftSavings).toBeGreaterThan(0);
+        
+        // Total savings might be similar or slightly higher due to manual shift
+        // but battery opportunity is reduced
+        expect(batteryWithManual.current.batSavings).toBeGreaterThan(0);
+      });
+    });
+
+    describe('Solar Opportunity Cost', () => {
+      it('should deduct solar opportunity cost when charging battery from solar', () => {
+        const inputs = {
+          bill: 3000,
+          gasBill: 0,
+          petrolBill: 0,
+          solarSize: 6.6,
+          batterySize: 13.5,
+          isEV: false,
+          isV2H: false,
+          isHeatPump: false,
+          isInduction: false,
+          hasGasHeating: false,
+          hasGasWater: false,
+          hasGasCooking: false,
+          hasOldDryer: false,
+          gridExportLimit: 5,
+          serviceFuse: 63,
+          hasPool: false,
+          strategies: {
+            chargeEvInWindow: false,
+            chargeBatInWindow: true,
+            runPoolInWindow: false,
+            runHotWaterInWindow: false,
+          },
+          currentSetup: {
+            hotWater: 'resistive' as const,
+            heating: 'none' as const,
+            cooking: 'induction' as const,
+            pool: 'none' as const,
+          },
+        };
+
+        // Test 1: Battery with solar
+        const { result: withSolar } = renderHook(() => useEnergyMath(inputs));
+
+        // Test 2: Battery without solar (for comparison)
+        const inputsNoSolar = { ...inputs, solarSize: 0 };
+        const { result: noSolar } = renderHook(() => useEnergyMath(inputsNoSolar));
+
+        // Battery arbitrage with solar should be slightly lower due to opportunity cost
+        // (lost feed-in tariff revenue)
+        expect(withSolar.current.batteryArbitrageSavings).toBeLessThan(
+          noSolar.current.batteryArbitrageSavings
+        );
+      });
+    });
+
+    describe('Gas Breakdown Components', () => {
+      it('should break down gas savings into components', () => {
+        const inputs = {
+          bill: 3000,
+          gasBill: 800,
+          petrolBill: 0,
+          solarSize: 0,
+          batterySize: 0,
+          isEV: false,
+          isV2H: false,
+          isHeatPump: true,
+          isInduction: true,
+          hasGasHeating: true,
+          hasGasWater: true,
+          hasGasCooking: true,
+          hasOldDryer: false,
+          gridExportLimit: 5,
+          serviceFuse: 63,
+          hasPool: false,
+          strategies: {
+            chargeEvInWindow: false,
+            chargeBatInWindow: false,
+            runPoolInWindow: false,
+            runHotWaterInWindow: false,
+          },
+          currentSetup: {
+            hotWater: 'gas' as const,
+            heating: 'gas' as const,
+            cooking: 'gas' as const,
+            pool: 'none' as const,
+          },
+        };
+
+        const { result } = renderHook(() => useEnergyMath(inputs));
+
+        // All gas components should have savings
+        expect(result.current.hotWaterSavings).toBeGreaterThan(0);
+        expect(result.current.heatingSavings).toBeGreaterThan(0);
+        expect(result.current.cookingSavings).toBeGreaterThan(0);
+        
+        // Gas disconnection bonus should be present (all gas removed)
+        expect(result.current.gasDisconnectionBonus).toBe(350);
+        
+        // Total gas savings should equal sum of components
+        expect(result.current.gasSavings).toBe(
+          result.current.hotWaterSavings +
+          result.current.heatingSavings +
+          result.current.cookingSavings +
+          result.current.gasDisconnectionBonus
+        );
+      });
+
+      it('should not include disconnection bonus if some gas remains', () => {
+        const inputs = {
+          bill: 3000,
+          gasBill: 800,
+          petrolBill: 0,
+          solarSize: 0,
+          batterySize: 0,
+          isEV: false,
+          isV2H: false,
+          isHeatPump: true, // Upgrading hot water
+          isInduction: false, // NOT upgrading cooking
+          hasGasHeating: false,
+          hasGasWater: true,
+          hasGasCooking: true,
+          hasOldDryer: false,
+          gridExportLimit: 5,
+          serviceFuse: 63,
+          hasPool: false,
+          strategies: {
+            chargeEvInWindow: false,
+            chargeBatInWindow: false,
+            runPoolInWindow: false,
+            runHotWaterInWindow: false,
+          },
+          currentSetup: {
+            hotWater: 'gas' as const,
+            heating: 'none' as const,
+            cooking: 'gas' as const, // Still using gas
+            pool: 'none' as const,
+          },
+        };
+
+        const { result } = renderHook(() => useEnergyMath(inputs));
+
+        // Hot water savings should be present
+        expect(result.current.hotWaterSavings).toBeGreaterThan(0);
+        
+        // No disconnection bonus (still using gas for cooking)
+        expect(result.current.gasDisconnectionBonus).toBe(0);
+        expect(result.current.gasDisconnected).toBe(false);
+      });
+    });
+  });
 });
