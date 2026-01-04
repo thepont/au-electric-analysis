@@ -14,6 +14,7 @@ export interface SimulationConfig {
   season?: 'Summer' | 'Winter';
   strategy?: 'standard' | 'ovo';
   insulation?: 'Sealed' | 'Leaky';
+  initialSoC?: number;
 }
 
 export interface HourlyData {

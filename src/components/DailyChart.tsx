@@ -26,7 +26,24 @@ interface DailyChartProps {
   }>;
 }
 
-const CustomTooltip = ({ active, payload }: any) => {
+interface TooltipProps {
+  active?: boolean;
+  payload?: Array<{
+    payload: {
+      hourLabel: string;
+      solar: number;
+      consumption: number;
+      baseLoad: number;
+      heatingLoad: number;
+      shiftableLoad: number;
+      gridImport: number;
+      batterySoCPercent: number;
+      temperature: number;
+    };
+  }>;
+}
+
+const CustomTooltip = ({ active, payload }: TooltipProps) => {
   if (!active || !payload || !payload.length) return null;
 
   const data = payload[0].payload;

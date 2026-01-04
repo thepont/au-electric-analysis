@@ -3,6 +3,9 @@ import { DailyChart } from './DailyChart';
 import { generateDailyProfile, calculateDailySummary } from '../utils/simulationEngine';
 import { Sun, Moon, Zap, Thermometer, Battery, AlertTriangle } from 'lucide-react';
 
+// Energy rate constants (Australian market rates 2026)
+const PEAK_RATE = 0.58; // OVO Peak 4pm-9pm
+
 export const EnergySimulator = () => {
   // Simulation Configuration State
   const [solarSystemKw, setSolarSystemKw] = useState(6.6);
@@ -324,7 +327,7 @@ export const EnergySimulator = () => {
           
           {!loadShifting && (
             <div className="bg-amber-500/20 border border-amber-500/50 rounded-xl p-4 text-amber-100">
-              <span className="font-bold">💡 Pro Tip:</span> Enable Load Shifting to move Pool/EV/Hot Water to the 11am-2pm free window and save ${(summary.totalGridImport * 0.58).toFixed(0)}/day!
+              <span className="font-bold">💡 Pro Tip:</span> Enable Load Shifting to move Pool/EV/Hot Water to the 11am-2pm free window and save ${(summary.totalGridImport * PEAK_RATE).toFixed(0)}/day!
             </div>
           )}
 

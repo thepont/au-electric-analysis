@@ -80,11 +80,24 @@ export const generateDailyProfile = (config) => {
     loadShifting = false,
     season = 'Summer',
     strategy = 'standard',
-    insulation = 'Sealed'
+    insulation = 'Sealed',
+    initialSoC = 0
   } = config;
   
+  // Input validation
+  if (solarSystemKw < 0 || batteryKwh < 0) {
+    throw new Error('Solar system size and battery capacity must be non-negative');
+  }
+  if (heatingSchedule.start < 0 || heatingSchedule.start > 23 || 
+      heatingSchedule.end < 0 || heatingSchedule.end > 23) {
+    throw new Error('Heating schedule hours must be between 0 and 23');
+  }
+  if (initialSoC < 0 || initialSoC > batteryKwh) {
+    throw new Error('Initial SoC must be between 0 and battery capacity');
+  }
+  
   const hours = Array.from({ length: 24 }, (_, i) => i);
-  let currentSoC = 0; // Start with empty battery (or could be 20%)
+  let currentSoC = initialSoC; // Start with configured initial SoC
   let currentTemp = 18; // Start temperature
   
   const hourlyData = hours.map(h => {
