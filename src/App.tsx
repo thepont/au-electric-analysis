@@ -93,6 +93,14 @@ function App() {
             </div>
           )}
 
+          {/* 24-Hour Energy Simulator */}
+          {hasAcceptedDisclaimer && (
+            <EnergySimulator 
+              solarSystemKw={state.solarSize}
+              batteryKwh={state.batterySize}
+            />
+          )}
+
           {/* ROI Leaderboard */}
           {hasAcceptedDisclaimer && (
             <div className="bg-white rounded-[2.5rem] shadow-sm border border-slate-200 p-8">
@@ -116,11 +124,6 @@ function App() {
               </p>
               <CostGraph results={results} />
             </div>
-          )}
-
-          {/* 24-Hour Energy Simulator */}
-          {hasAcceptedDisclaimer && (
-            <EnergySimulator />
           )}
 
           {/* Referral Links */}

@@ -6,10 +6,19 @@ import { Sun, Moon, Zap, Thermometer, Battery, AlertTriangle } from 'lucide-reac
 // Energy rate constants (Australian market rates 2026)
 const PEAK_RATE = 0.58; // OVO Peak 4pm-9pm
 
-export const EnergySimulator = () => {
-  // Simulation Configuration State
-  const [solarSystemKw, setSolarSystemKw] = useState(6.6);
-  const [batteryKwh, setBatteryKwh] = useState(13.5);
+interface EnergySimulatorProps {
+  solarSystemKw?: number;
+  batteryKwh?: number;
+}
+
+export const EnergySimulator = ({ solarSystemKw: propSolarSize, batteryKwh: propBatterySize }: EnergySimulatorProps = {}) => {
+  // Use props if provided, otherwise use local state
+  const [localSolarSystemKw, setLocalSolarSystemKw] = useState(propSolarSize || 6.6);
+  const [localBatteryKwh, setLocalBatteryKwh] = useState(propBatterySize || 13.5);
+  
+  const solarSystemKw = propSolarSize !== undefined ? propSolarSize : localSolarSystemKw;
+  const batteryKwh = propBatterySize !== undefined ? propBatterySize : localBatteryKwh;
+  
   const [heatingStart, setHeatingStart] = useState(17);
   const [heatingEnd, setHeatingEnd] = useState(22);
   const [loadShifting, setLoadShifting] = useState(false);
@@ -61,9 +70,13 @@ export const EnergySimulator = () => {
                 max="20"
                 step="0.1"
                 value={solarSystemKw}
-                onChange={(e) => setSolarSystemKw(parseFloat(e.target.value))}
-                className="w-full h-2 bg-slate-200 rounded-lg appearance-none cursor-pointer accent-orange-500"
+                onChange={(e) => setLocalSolarSystemKw(parseFloat(e.target.value))}
+                disabled={propSolarSize !== undefined}
+                className="w-full h-2 bg-slate-200 rounded-lg appearance-none cursor-pointer accent-orange-500 disabled:opacity-50 disabled:cursor-not-allowed"
               />
+              {propSolarSize !== undefined && (
+                <p className="text-xs text-slate-500 mt-1">Synced with Your Energy Setup</p>
+              )}
             </div>
 
             {/* Battery Capacity */}
@@ -78,9 +91,13 @@ export const EnergySimulator = () => {
                 max="40"
                 step="0.5"
                 value={batteryKwh}
-                onChange={(e) => setBatteryKwh(parseFloat(e.target.value))}
-                className="w-full h-2 bg-slate-200 rounded-lg appearance-none cursor-pointer accent-emerald-500"
+                onChange={(e) => setLocalBatteryKwh(parseFloat(e.target.value))}
+                disabled={propBatterySize !== undefined}
+                className="w-full h-2 bg-slate-200 rounded-lg appearance-none cursor-pointer accent-emerald-500 disabled:opacity-50 disabled:cursor-not-allowed"
               />
+              {propBatterySize !== undefined && (
+                <p className="text-xs text-slate-500 mt-1">Synced with Your Energy Setup</p>
+              )}
             </div>
 
             {/* Season Toggle */}
