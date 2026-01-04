@@ -16,6 +16,13 @@ interface ROITableProps {
     systemCost: number;
     roiYears: number;
     gridPriceWarning?: string;
+    gasDisconnected: boolean;
+    liabilityCosts: {
+      hotWater: number;
+      heating: number;
+      cooking: number;
+      pool: number;
+    };
   };
 }
 
@@ -33,6 +40,7 @@ export const ROITable = ({ results }: ROITableProps) => {
     {
       name: 'OVO Free 3 Plan',
       cost: 0,
+      liability: 0,
       saving: results.batSavings,
       link: 'https://www.ovoenergy.com.au/refer/paul8789',
       color: 'emerald',
@@ -40,6 +48,7 @@ export const ROITable = ({ results }: ROITableProps) => {
     {
       name: 'Solar System',
       cost: results.systemCost > 0 ? Math.round(results.solarSavings / results.totalSavings * results.systemCost) : 0,
+      liability: 0, // Solar doesn't replace anything
       saving: results.solarSavings,
       link: null,
       color: 'yellow',
@@ -47,6 +56,7 @@ export const ROITable = ({ results }: ROITableProps) => {
     {
       name: 'Tesla EV Switch',
       cost: 15000,
+      liability: 0, // Transport doesn't have a legacy liability (petrol is consumed, not an asset)
       saving: results.transportSavings,
       link: 'https://ts.la/paul511330',
       color: 'blue',
@@ -54,6 +64,7 @@ export const ROITable = ({ results }: ROITableProps) => {
     {
       name: 'Gas Conversion',
       cost: results.gasSavings > 0 ? 5500 : 0,
+      liability: results.liabilityCosts.hotWater + results.liabilityCosts.heating + results.liabilityCosts.cooking,
       saving: results.gasSavings,
       link: null,
       color: 'orange',
@@ -61,6 +72,7 @@ export const ROITable = ({ results }: ROITableProps) => {
     {
       name: 'Variable Speed Pool Pump',
       cost: 1500,
+      liability: results.liabilityCosts.pool,
       saving: results.poolPumpSavings,
       link: null,
       color: 'cyan',
@@ -68,6 +80,7 @@ export const ROITable = ({ results }: ROITableProps) => {
     {
       name: 'Heat Pump Dryer',
       cost: 1200,
+      liability: 0, // Dryer liability not calculated (not critical)
       saving: results.hpDryerSavings,
       link: null,
       color: 'purple',
@@ -75,6 +88,7 @@ export const ROITable = ({ results }: ROITableProps) => {
     {
       name: 'Draught Proofing',
       cost: 300,
+      liability: 0, // Gap sealing doesn't replace anything
       saving: results.gapSealingSavings,
       link: null,
       color: 'teal',
@@ -90,6 +104,16 @@ export const ROITable = ({ results }: ROITableProps) => {
           </p>
         </div>
       )}
+      
+      {/* Gas Disconnection Badge */}
+      {results.gasDisconnected && (
+        <div className="mb-4 bg-emerald-50 border-l-4 border-emerald-500 p-3 rounded">
+          <p className="text-sm text-emerald-800">
+            ✅ <strong>Gas Supply Eliminated:</strong> You've upgraded all gas appliances! Saving an additional $350/year in supply charges.
+          </p>
+        </div>
+      )}
+      
       <table className="min-w-full divide-y divide-gray-200">
         <thead className="bg-slate-100">
           <tr>
@@ -98,6 +122,11 @@ export const ROITable = ({ results }: ROITableProps) => {
             </th>
             <th className="px-6 py-3 text-right text-xs font-medium text-slate-400 uppercase tracking-widest">
               Upfront Cost
+            </th>
+            <th className="px-6 py-3 text-right text-xs font-medium text-slate-400 uppercase tracking-widest">
+              <Tooltip content="10-year cost if you keep the old system. Shows the hidden cost of not upgrading.">
+                <span>10-Yr Liability</span>
+              </Tooltip>
             </th>
             <th className="px-6 py-3 text-right text-xs font-medium text-slate-400 uppercase tracking-widest">
               <Tooltip content="Estimated based on current energy rates. Subject to change by retailers.">
@@ -135,6 +164,9 @@ export const ROITable = ({ results }: ROITableProps) => {
                 <td className="px-6 py-4 whitespace-nowrap text-sm text-right text-gray-700">
                   {formatCurrency(strategy.cost)}
                 </td>
+                <td className="px-6 py-4 whitespace-nowrap text-sm text-right text-rose-600 font-medium">
+                  {strategy.liability > 0 ? formatCurrency(strategy.liability) : '—'}
+                </td>
                 <td className={`px-6 py-4 whitespace-nowrap text-sm text-right font-semibold ${colorMap[strategy.color]}`}>
                   {formatCurrency(strategy.saving)}
                 </td>
@@ -168,6 +200,14 @@ export const ROITable = ({ results }: ROITableProps) => {
             </td>
             <td className="px-6 py-4 whitespace-nowrap text-sm text-right">
               {formatCurrency(results.systemCost)}
+            </td>
+            <td className="px-6 py-4 whitespace-nowrap text-sm text-right">
+              {formatCurrency(
+                results.liabilityCosts.hotWater + 
+                results.liabilityCosts.heating + 
+                results.liabilityCosts.cooking + 
+                results.liabilityCosts.pool
+              )}
             </td>
             <td className="px-6 py-4 whitespace-nowrap text-sm text-right">
               {formatCurrency(results.totalSavings)}
