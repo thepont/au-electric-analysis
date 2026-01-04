@@ -32,11 +32,36 @@ jobs:
           # Override base path for preview deployment
           VITE_BASE: /au-electric-analysis/preview/pr-${{ github.event.pull_request.number }}/
 
+      - name: Check if gh-pages branch exists
+        id: check-gh-pages
+        run: |
+          if git ls-remote --heads origin gh-pages | grep gh-pages; then
+            echo "exists=true" >> $GITHUB_OUTPUT
+          else
+            echo "exists=false" >> $GITHUB_OUTPUT
+          fi
+
       - name: Checkout gh-pages branch
+        if: steps.check-gh-pages.outputs.exists == 'true'
         uses: actions/checkout@v4
         with:
           ref: gh-pages
           path: gh-pages
+
+      - name: Create gh-pages branch
+        if: steps.check-gh-pages.outputs.exists == 'false'
+        run: |
+          mkdir gh-pages
+          cd gh-pages
+          git init
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git checkout -b gh-pages
+          echo "# Preview Deployments" > README.md
+          git add README.md
+          git commit -m "Initialize gh-pages branch"
+          git remote add origin https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/${{ github.repository }}.git
+          git push -u origin gh-pages
 
       - name: Deploy to preview directory
         run: |
