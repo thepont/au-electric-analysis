@@ -1709,14 +1709,11 @@ describe('useEnergyMath', () => {
         };
         const { result: chargingInWindow } = renderHook(() => useEnergyMath(chargingInputs));
 
-        // When charging in free window with solar, opportunity cost should reduce savings
-        // So not charging should have higher battery arbitrage (no opportunity cost)
-        // OR the battery arbitrage when not charging in window represents other use cases
-        // (e.g., storing solar during day to use at peak evening)
-        
-        // The key test: opportunity cost only applies when chargeBatInWindow is true
-        // When chargeBatInWindow is false, battery can still save via solar storage
-        // but there's no solar opportunity cost for grid charging in free window
+        // Key test: When charging in free window with solar, opportunity cost reduces savings
+        // So not charging should have higher (or equal) battery arbitrage savings
+        // Note: The battery still provides value in the current implementation by calculating
+        // the potential arbitrage savings (what you COULD save if you used the battery optimally).
+        // The chargeBatInWindow flag primarily affects whether solar opportunity cost is applied.
         expect(notChargingInWindow.current.batteryArbitrageSavings).toBeGreaterThanOrEqual(
           chargingInWindow.current.batteryArbitrageSavings
         );

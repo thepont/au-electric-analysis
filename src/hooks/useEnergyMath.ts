@@ -397,7 +397,9 @@ export const useEnergyMath = (inputs: EnergyInputs): EnergyResults => {
     }
     
     // Hot water timer hack: Moves 3kWh from peak to free window
-    // Heat pump hot water: ~2.5kWh daily, typically ~3kWh max would be in peak
+    // Heat pump hot water (when isHeatPump is true): ~2.5kWh daily average usage
+    // Typically ~1.5kWh would run during peak evening hours when people shower
+    // Timer moves this load to the 11am-2pm free window, saving up to 3kWh from peak
     if (isHeatPump && strategies.runHotWaterInWindow) {
       manualShiftKwh += 3.0;
       peakConsumptionKwh -= 3.0;
@@ -419,7 +421,7 @@ export const useEnergyMath = (inputs: EnergyInputs): EnergyResults => {
     
     // Step 6: Calculate Battery Arbitrage Savings
     // Gross savings from arbitrage (buy at $0 during free window, avoid $0.58 peak)
-    let grossBatterySavings = batteryShiftKwh * (PEAK_RATE - FREE_WINDOW) * 365;
+    const grossBatterySavings = batteryShiftKwh * (PEAK_RATE - FREE_WINDOW) * 365;
     
     // Solar Opportunity Cost (The "Hidden Cost")
     // If you have solar generating during the free window (11am-2pm), your inverter
