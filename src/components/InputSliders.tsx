@@ -236,16 +236,24 @@ export const InputSliders = ({ state, updateState }: InputSlidersProps) => {
       {/* Strategy Toggles */}
       <div className="pt-4 border-t border-gray-200">
         <h3 className="text-lg font-semibold text-slate-900 tracking-tighter mb-3">Energy Strategy</h3>
+        <p className="text-sm text-slate-600 mb-3">Select upgrades you want to model in your energy plan:</p>
         <div className="grid md:grid-cols-2 lg:grid-cols-5 gap-3">
           {/* EV Toggle */}
           <button
             onClick={() => updateState({ isEV: !state.isEV })}
-            className={`p-4 rounded-lg border-2 transition-all ${
+            className={`relative p-4 rounded-lg border-2 transition-all ${
               state.isEV
-                ? 'border-emerald-500 bg-emerald-50'
-                : 'border-gray-300 bg-white hover:border-gray-400'
+                ? 'border-emerald-500 bg-emerald-50 shadow-sm'
+                : 'border-gray-300 bg-white hover:border-gray-400 hover:shadow-sm'
             }`}
           >
+            {state.isEV && (
+              <div className="absolute top-2 right-2 w-5 h-5 bg-emerald-600 rounded-full flex items-center justify-center">
+                <svg className="w-3 h-3 text-white" fill="none" strokeLinecap="round" strokeLinejoin="round" strokeWidth="3" viewBox="0 0 24 24" stroke="currentColor">
+                  <path d="M5 13l4 4L19 7"></path>
+                </svg>
+              </div>
+            )}
             <div className="flex items-center space-x-2">
               <Car className={`w-5 h-5 ${state.isEV ? 'text-emerald-600' : 'text-gray-400'}`} />
               <span className={`font-medium ${state.isEV ? 'text-emerald-700' : 'text-gray-600'}`}>
@@ -258,14 +266,21 @@ export const InputSliders = ({ state, updateState }: InputSlidersProps) => {
           <button
             onClick={() => updateState({ isV2H: !state.isV2H })}
             disabled={!state.isEV}
-            className={`p-4 rounded-lg border-2 transition-all ${
+            className={`relative p-4 rounded-lg border-2 transition-all ${
               state.isV2H
-                ? 'border-blue-500 bg-blue-50'
+                ? 'border-blue-500 bg-blue-50 shadow-sm'
                 : state.isEV
-                ? 'border-gray-300 bg-white hover:border-gray-400'
+                ? 'border-gray-300 bg-white hover:border-gray-400 hover:shadow-sm'
                 : 'border-gray-200 bg-gray-100 cursor-not-allowed opacity-50'
             }`}
           >
+            {state.isV2H && (
+              <div className="absolute top-2 right-2 w-5 h-5 bg-blue-600 rounded-full flex items-center justify-center">
+                <svg className="w-3 h-3 text-white" fill="none" strokeLinecap="round" strokeLinejoin="round" strokeWidth="3" viewBox="0 0 24 24" stroke="currentColor">
+                  <path d="M5 13l4 4L19 7"></path>
+                </svg>
+              </div>
+            )}
             <div className="flex items-center space-x-2">
               <Battery className={`w-5 h-5 ${state.isV2H ? 'text-blue-600' : 'text-gray-400'}`} />
               <span className={`font-medium ${state.isV2H ? 'text-blue-700' : 'text-gray-600'}`}>
@@ -277,12 +292,19 @@ export const InputSliders = ({ state, updateState }: InputSlidersProps) => {
           {/* Heat Pump Toggle */}
           <button
             onClick={() => updateState({ isHeatPump: !state.isHeatPump })}
-            className={`p-4 rounded-lg border-2 transition-all ${
+            className={`relative p-4 rounded-lg border-2 transition-all ${
               state.isHeatPump
-                ? 'border-amber-500 bg-amber-50'
-                : 'border-gray-300 bg-white hover:border-gray-400'
+                ? 'border-amber-500 bg-amber-50 shadow-sm'
+                : 'border-gray-300 bg-white hover:border-gray-400 hover:shadow-sm'
             }`}
           >
+            {state.isHeatPump && (
+              <div className="absolute top-2 right-2 w-5 h-5 bg-amber-600 rounded-full flex items-center justify-center">
+                <svg className="w-3 h-3 text-white" fill="none" strokeLinecap="round" strokeLinejoin="round" strokeWidth="3" viewBox="0 0 24 24" stroke="currentColor">
+                  <path d="M5 13l4 4L19 7"></path>
+                </svg>
+              </div>
+            )}
             <div className="flex items-center space-x-2">
               <Flame className={`w-5 h-5 ${state.isHeatPump ? 'text-amber-600' : 'text-gray-400'}`} />
               <span className={`font-medium ${state.isHeatPump ? 'text-amber-700' : 'text-gray-600'}`}>
@@ -294,12 +316,19 @@ export const InputSliders = ({ state, updateState }: InputSlidersProps) => {
           {/* Induction Toggle */}
           <button
             onClick={() => updateState({ isInduction: !state.isInduction })}
-            className={`p-4 rounded-lg border-2 transition-all ${
+            className={`relative p-4 rounded-lg border-2 transition-all ${
               state.isInduction
-                ? 'border-purple-500 bg-purple-50'
-                : 'border-gray-300 bg-white hover:border-gray-400'
+                ? 'border-purple-500 bg-purple-50 shadow-sm'
+                : 'border-gray-300 bg-white hover:border-gray-400 hover:shadow-sm'
             }`}
           >
+            {state.isInduction && (
+              <div className="absolute top-2 right-2 w-5 h-5 bg-purple-600 rounded-full flex items-center justify-center">
+                <svg className="w-3 h-3 text-white" fill="none" strokeLinecap="round" strokeLinejoin="round" strokeWidth="3" viewBox="0 0 24 24" stroke="currentColor">
+                  <path d="M5 13l4 4L19 7"></path>
+                </svg>
+              </div>
+            )}
             <div className="flex items-center space-x-2">
               <Zap className={`w-5 h-5 ${state.isInduction ? 'text-purple-600' : 'text-gray-400'}`} />
               <span className={`font-medium ${state.isInduction ? 'text-purple-700' : 'text-gray-600'}`}>
@@ -311,12 +340,19 @@ export const InputSliders = ({ state, updateState }: InputSlidersProps) => {
           {/* Pool Toggle */}
           <button
             onClick={() => updateState({ hasPool: !state.hasPool })}
-            className={`p-4 rounded-lg border-2 transition-all ${
+            className={`relative p-4 rounded-lg border-2 transition-all ${
               state.hasPool
-                ? 'border-cyan-500 bg-cyan-50'
-                : 'border-gray-300 bg-white hover:border-gray-400'
+                ? 'border-cyan-500 bg-cyan-50 shadow-sm'
+                : 'border-gray-300 bg-white hover:border-gray-400 hover:shadow-sm'
             }`}
           >
+            {state.hasPool && (
+              <div className="absolute top-2 right-2 w-5 h-5 bg-cyan-600 rounded-full flex items-center justify-center">
+                <svg className="w-3 h-3 text-white" fill="none" strokeLinecap="round" strokeLinejoin="round" strokeWidth="3" viewBox="0 0 24 24" stroke="currentColor">
+                  <path d="M5 13l4 4L19 7"></path>
+                </svg>
+              </div>
+            )}
             <div className="flex items-center space-x-2">
               <Waves className={`w-5 h-5 ${state.hasPool ? 'text-cyan-600' : 'text-gray-400'}`} />
               <span className={`font-medium ${state.hasPool ? 'text-cyan-700' : 'text-gray-600'}`}>
@@ -330,22 +366,29 @@ export const InputSliders = ({ state, updateState }: InputSlidersProps) => {
       {/* 11:00 AM Stack Section */}
       <div className="pt-4 border-t border-gray-200">
         <h3 className="text-lg font-semibold text-slate-900 tracking-tighter mb-1">11:00 AM Stack</h3>
-        <p className="text-sm text-slate-400 mb-3 uppercase tracking-widest">
-          Which devices run during the Free 3 window (11am-2pm)?
+        <p className="text-sm text-slate-600 mb-3">
+          Select which devices run during the Free 3 window (11am-2pm):
         </p>
         <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-3">
-          {/* EV Charging Window */}
+          {/* EV Charging Toggle */}
           <button
             onClick={() => updateState({ strategies: { ...state.strategies, chargeEvInWindow: !state.strategies.chargeEvInWindow } })}
             disabled={!state.isEV}
-            className={`p-4 rounded-lg border-2 transition-all ${
+            className={`relative p-4 rounded-lg border-2 transition-all ${
               state.strategies.chargeEvInWindow
-                ? 'border-emerald-500 bg-emerald-50'
+                ? 'border-emerald-500 bg-emerald-50 shadow-sm'
                 : state.isEV
-                ? 'border-gray-300 bg-white hover:border-gray-400'
+                ? 'border-gray-300 bg-white hover:border-gray-400 hover:shadow-sm'
                 : 'border-gray-200 bg-gray-100 cursor-not-allowed opacity-50'
             }`}
           >
+            {state.strategies.chargeEvInWindow && (
+              <div className="absolute top-2 right-2 w-5 h-5 bg-emerald-600 rounded-full flex items-center justify-center">
+                <svg className="w-3 h-3 text-white" fill="none" strokeLinecap="round" strokeLinejoin="round" strokeWidth="3" viewBox="0 0 24 24" stroke="currentColor">
+                  <path d="M5 13l4 4L19 7"></path>
+                </svg>
+              </div>
+            )}
             <div className="flex flex-col space-y-1">
               <div className="flex items-center space-x-2">
                 <Car className={`w-5 h-5 ${state.strategies.chargeEvInWindow ? 'text-emerald-600' : 'text-gray-400'}`} />
@@ -357,18 +400,25 @@ export const InputSliders = ({ state, updateState }: InputSlidersProps) => {
             </div>
           </button>
 
-          {/* Battery Charging Window */}
+          {/* Battery Charging Toggle */}
           <button
             onClick={() => updateState({ strategies: { ...state.strategies, chargeBatInWindow: !state.strategies.chargeBatInWindow } })}
             disabled={state.batterySize === 0 && !state.isV2H}
-            className={`p-4 rounded-lg border-2 transition-all ${
+            className={`relative p-4 rounded-lg border-2 transition-all ${
               state.strategies.chargeBatInWindow
-                ? 'border-blue-500 bg-blue-50'
+                ? 'border-blue-500 bg-blue-50 shadow-sm'
                 : (state.batterySize > 0 || state.isV2H)
-                ? 'border-gray-300 bg-white hover:border-gray-400'
+                ? 'border-gray-300 bg-white hover:border-gray-400 hover:shadow-sm'
                 : 'border-gray-200 bg-gray-100 cursor-not-allowed opacity-50'
             }`}
           >
+            {state.strategies.chargeBatInWindow && (
+              <div className="absolute top-2 right-2 w-5 h-5 bg-blue-600 rounded-full flex items-center justify-center">
+                <svg className="w-3 h-3 text-white" fill="none" strokeLinecap="round" strokeLinejoin="round" strokeWidth="3" viewBox="0 0 24 24" stroke="currentColor">
+                  <path d="M5 13l4 4L19 7"></path>
+                </svg>
+              </div>
+            )}
             <div className="flex flex-col space-y-1">
               <div className="flex items-center space-x-2">
                 <Battery className={`w-5 h-5 ${state.strategies.chargeBatInWindow ? 'text-blue-600' : 'text-gray-400'}`} />
@@ -380,18 +430,25 @@ export const InputSliders = ({ state, updateState }: InputSlidersProps) => {
             </div>
           </button>
 
-          {/* Pool Pump Window */}
+          {/* Pool Pump Toggle */}
           <button
             onClick={() => updateState({ strategies: { ...state.strategies, runPoolInWindow: !state.strategies.runPoolInWindow } })}
             disabled={!state.hasPool}
-            className={`p-4 rounded-lg border-2 transition-all ${
+            className={`relative p-4 rounded-lg border-2 transition-all ${
               state.strategies.runPoolInWindow
-                ? 'border-cyan-500 bg-cyan-50'
+                ? 'border-cyan-500 bg-cyan-50 shadow-sm'
                 : state.hasPool
-                ? 'border-gray-300 bg-white hover:border-gray-400'
+                ? 'border-gray-300 bg-white hover:border-gray-400 hover:shadow-sm'
                 : 'border-gray-200 bg-gray-100 cursor-not-allowed opacity-50'
             }`}
           >
+            {state.strategies.runPoolInWindow && (
+              <div className="absolute top-2 right-2 w-5 h-5 bg-cyan-600 rounded-full flex items-center justify-center">
+                <svg className="w-3 h-3 text-white" fill="none" strokeLinecap="round" strokeLinejoin="round" strokeWidth="3" viewBox="0 0 24 24" stroke="currentColor">
+                  <path d="M5 13l4 4L19 7"></path>
+                </svg>
+              </div>
+            )}
             <div className="flex flex-col space-y-1">
               <div className="flex items-center space-x-2">
                 <Waves className={`w-5 h-5 ${state.strategies.runPoolInWindow ? 'text-cyan-600' : 'text-gray-400'}`} />
@@ -403,18 +460,25 @@ export const InputSliders = ({ state, updateState }: InputSlidersProps) => {
             </div>
           </button>
 
-          {/* Hot Water Window */}
+          {/* Hot Water Toggle */}
           <button
             onClick={() => updateState({ strategies: { ...state.strategies, runHotWaterInWindow: !state.strategies.runHotWaterInWindow } })}
             disabled={!state.isHeatPump}
-            className={`p-4 rounded-lg border-2 transition-all ${
+            className={`relative p-4 rounded-lg border-2 transition-all ${
               state.strategies.runHotWaterInWindow
-                ? 'border-amber-500 bg-amber-50'
+                ? 'border-amber-500 bg-amber-50 shadow-sm'
                 : state.isHeatPump
-                ? 'border-gray-300 bg-white hover:border-gray-400'
+                ? 'border-gray-300 bg-white hover:border-gray-400 hover:shadow-sm'
                 : 'border-gray-200 bg-gray-100 cursor-not-allowed opacity-50'
             }`}
           >
+            {state.strategies.runHotWaterInWindow && (
+              <div className="absolute top-2 right-2 w-5 h-5 bg-amber-600 rounded-full flex items-center justify-center">
+                <svg className="w-3 h-3 text-white" fill="none" strokeLinecap="round" strokeLinejoin="round" strokeWidth="3" viewBox="0 0 24 24" stroke="currentColor">
+                  <path d="M5 13l4 4L19 7"></path>
+                </svg>
+              </div>
+            )}
             <div className="flex flex-col space-y-1">
               <div className="flex items-center space-x-2">
                 <Flame className={`w-5 h-5 ${state.strategies.runHotWaterInWindow ? 'text-amber-600' : 'text-gray-400'}`} />
