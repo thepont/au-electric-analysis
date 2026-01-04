@@ -49,6 +49,8 @@ npm run preview
 
 The app automatically deploys to GitHub Pages when merged to `main` via GitHub Actions.
 
+**Note:** Both the main deployment and preview deployments use the `gh-pages` branch. The main site deploys to the root, while PR previews deploy to subdirectories. Make sure GitHub Pages is configured to deploy from the `gh-pages` branch in your repository settings.
+
 ### Preview Deployments
 
 Pull requests automatically get preview deployments! When you open or update a PR:
