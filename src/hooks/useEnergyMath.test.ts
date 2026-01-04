@@ -7,6 +7,7 @@ const DEFAULT_CURRENT_SETUP = {
   heating: 'gas' as const,
   cooking: 'gas' as const,
   pool: 'none' as const,
+            dryer: 'vented' as const,
 };
 
 describe('useEnergyMath', () => {
@@ -26,7 +27,7 @@ describe('useEnergyMath', () => {
         hasGasHeating: true,
         hasGasWater: true,
         hasGasCooking: true,
-        hasOldDryer: false,
+        roomCount: 4,
         serviceFuse: 63,
         hasPool: false,
         strategies: {
@@ -79,7 +80,7 @@ describe('useEnergyMath', () => {
         hasGasHeating: true,
         hasGasWater: true,
         hasGasCooking: true,
-        hasOldDryer: false,
+        roomCount: 4,
         gridExportLimit: 5, // 5kW limit
         serviceFuse: 63,
         hasPool: false,
@@ -112,7 +113,7 @@ describe('useEnergyMath', () => {
         hasGasHeating: true,
         hasGasWater: true,
         hasGasCooking: true,
-        hasOldDryer: false,
+        roomCount: 4,
         gridExportLimit: 0, // No export allowed
         serviceFuse: 63,
         hasPool: false,
@@ -154,7 +155,7 @@ describe('useEnergyMath', () => {
         hasGasHeating: true,
         hasGasWater: true,
         hasGasCooking: true,
-        hasOldDryer: false,
+        roomCount: 4,
         gridExportLimit: 10, // Three Phase limit
         serviceFuse: 63,
         hasPool: false,
@@ -197,7 +198,7 @@ describe('useEnergyMath', () => {
         hasGasHeating: true,
         hasGasWater: true,
         hasGasCooking: true,
-        hasOldDryer: false,
+        roomCount: 4,
         gridExportLimit: 5,
         serviceFuse: 63,
         hasPool: false,
@@ -240,7 +241,7 @@ describe('useEnergyMath', () => {
         hasGasHeating: true,
         hasGasWater: true,
         hasGasCooking: true,
-        hasOldDryer: false,
+        roomCount: 4,
         gridExportLimit: 5,
         serviceFuse: 63,
         hasPool: false,
@@ -277,7 +278,7 @@ describe('useEnergyMath', () => {
         hasGasHeating: true,
         hasGasWater: true,
         hasGasCooking: true,
-        hasOldDryer: false,
+        roomCount: 4,
         gridExportLimit: 5,
         serviceFuse: 100,
         hasPool: false,
@@ -310,7 +311,7 @@ describe('useEnergyMath', () => {
         hasGasHeating: true,
         hasGasWater: true,
         hasGasCooking: true,
-        hasOldDryer: false,
+        roomCount: 4,
         gridExportLimit: 5,
         serviceFuse: 63,
         hasPool: true,
@@ -346,7 +347,7 @@ describe('useEnergyMath', () => {
         hasGasHeating: true,
         hasGasWater: true,
         hasGasCooking: true,
-        hasOldDryer: false,
+        roomCount: 4,
         gridExportLimit: 5,
         serviceFuse: 80,
         hasPool: false,
@@ -382,7 +383,7 @@ describe('useEnergyMath', () => {
         hasGasHeating: true,
         hasGasWater: true,
         hasGasCooking: true,
-        hasOldDryer: false,
+        roomCount: 4,
         gridExportLimit: 5,
         serviceFuse: 63, // 14.49 kW max
         hasPool: true,
@@ -421,7 +422,7 @@ describe('useEnergyMath', () => {
         hasGasHeating: true,
         hasGasWater: true,
         hasGasCooking: true,
-        hasOldDryer: false,
+        roomCount: 4,
         gridExportLimit: 5,
         serviceFuse: 63, // 14.49 kW max = 43.47 kWh over 3h
         hasPool: true,
@@ -463,7 +464,7 @@ describe('useEnergyMath', () => {
           hasGasHeating: false,
           hasGasWater: true,
           hasGasCooking: false,
-          hasOldDryer: false,
+          roomCount: 4,
           gridExportLimit: 5,
           serviceFuse: 63,
           hasPool: false,
@@ -478,6 +479,7 @@ describe('useEnergyMath', () => {
             heating: 'none' as const,
             cooking: 'induction' as const,
             pool: 'none' as const,
+            dryer: 'vented' as const,
           },
         };
 
@@ -510,7 +512,7 @@ describe('useEnergyMath', () => {
           hasGasHeating: false,
           hasGasWater: false,
           hasGasCooking: false,
-          hasOldDryer: false,
+          roomCount: 4,
           gridExportLimit: 5,
           serviceFuse: 63,
           hasPool: false,
@@ -525,6 +527,7 @@ describe('useEnergyMath', () => {
             heating: 'none' as const,
             cooking: 'induction' as const,
             pool: 'none' as const,
+            dryer: 'vented' as const,
           },
         };
 
@@ -553,7 +556,7 @@ describe('useEnergyMath', () => {
           hasGasHeating: false,
           hasGasWater: true,
           hasGasCooking: false,
-          hasOldDryer: false,
+          roomCount: 4,
           gridExportLimit: 5,
           serviceFuse: 63,
           hasPool: false,
@@ -568,6 +571,7 @@ describe('useEnergyMath', () => {
             heating: 'none' as const,
             cooking: 'induction' as const,
             pool: 'none' as const,
+            dryer: 'vented' as const,
           },
         };
 
@@ -593,7 +597,7 @@ describe('useEnergyMath', () => {
           hasGasHeating: true,
           hasGasWater: false,
           hasGasCooking: false,
-          hasOldDryer: false,
+          roomCount: 4,
           gridExportLimit: 5,
           serviceFuse: 63,
           hasPool: false,
@@ -608,6 +612,7 @@ describe('useEnergyMath', () => {
             heating: 'gas' as const,
             cooking: 'induction' as const,
             pool: 'none' as const,
+            dryer: 'vented' as const,
           },
         };
 
@@ -637,7 +642,7 @@ describe('useEnergyMath', () => {
           hasGasHeating: false,
           hasGasWater: false,
           hasGasCooking: false,
-          hasOldDryer: false,
+          roomCount: 4,
           gridExportLimit: 5,
           serviceFuse: 63,
           hasPool: false,
@@ -652,6 +657,7 @@ describe('useEnergyMath', () => {
             heating: 'resistive' as const,
             cooking: 'induction' as const,
             pool: 'none' as const,
+            dryer: 'vented' as const,
           },
         };
 
@@ -680,7 +686,7 @@ describe('useEnergyMath', () => {
           hasGasHeating: true,
           hasGasWater: false,
           hasGasCooking: false,
-          hasOldDryer: false,
+          roomCount: 4,
           gridExportLimit: 5,
           serviceFuse: 63,
           hasPool: false,
@@ -695,6 +701,7 @@ describe('useEnergyMath', () => {
             heating: 'rc' as const,
             cooking: 'gas' as const,
             pool: 'none' as const,
+            dryer: 'vented' as const,
           },
         };
 
@@ -720,7 +727,7 @@ describe('useEnergyMath', () => {
           hasGasHeating: false,
           hasGasWater: false,
           hasGasCooking: true,
-          hasOldDryer: false,
+          roomCount: 4,
           gridExportLimit: 5,
           serviceFuse: 63,
           hasPool: false,
@@ -735,6 +742,7 @@ describe('useEnergyMath', () => {
             heating: 'none' as const,
             cooking: 'gas' as const,
             pool: 'none' as const,
+            dryer: 'vented' as const,
           },
         };
 
@@ -764,7 +772,7 @@ describe('useEnergyMath', () => {
           hasGasHeating: false,
           hasGasWater: false,
           hasGasCooking: true,
-          hasOldDryer: false,
+          roomCount: 4,
           gridExportLimit: 5,
           serviceFuse: 63,
           hasPool: false,
@@ -779,6 +787,7 @@ describe('useEnergyMath', () => {
             heating: 'none' as const,
             cooking: 'induction' as const,
             pool: 'none' as const,
+            dryer: 'vented' as const,
           },
         };
 
@@ -804,7 +813,7 @@ describe('useEnergyMath', () => {
           hasGasHeating: false,
           hasGasWater: false,
           hasGasCooking: false,
-          hasOldDryer: false,
+          roomCount: 4,
           gridExportLimit: 5,
           serviceFuse: 63,
           hasPool: true,
@@ -819,6 +828,7 @@ describe('useEnergyMath', () => {
             heating: 'none' as const,
             cooking: 'induction' as const,
             pool: 'single_speed' as const,
+            dryer: 'vented' as const,
           },
         };
 
@@ -849,7 +859,7 @@ describe('useEnergyMath', () => {
           hasGasHeating: false,
           hasGasWater: false,
           hasGasCooking: false,
-          hasOldDryer: false,
+          roomCount: 4,
           gridExportLimit: 5,
           serviceFuse: 63,
           hasPool: true,
@@ -864,6 +874,7 @@ describe('useEnergyMath', () => {
             heating: 'none' as const,
             cooking: 'induction' as const,
             pool: 'single_speed' as const,
+            dryer: 'vented' as const,
           },
         };
 
@@ -889,7 +900,7 @@ describe('useEnergyMath', () => {
           hasGasHeating: false,
           hasGasWater: false,
           hasGasCooking: false,
-          hasOldDryer: false,
+          roomCount: 4,
           gridExportLimit: 5,
           serviceFuse: 63,
           hasPool: true,
@@ -904,6 +915,7 @@ describe('useEnergyMath', () => {
             heating: 'none' as const,
             cooking: 'induction' as const,
             pool: 'variable_speed' as const,
+            dryer: 'vented' as const,
           },
         };
 
@@ -931,7 +943,7 @@ describe('useEnergyMath', () => {
           hasGasHeating: false,
           hasGasWater: false,
           hasGasCooking: false,
-          hasOldDryer: false,
+          roomCount: 4,
           gridExportLimit: 5,
           serviceFuse: 63,
           hasPool: false,
@@ -946,6 +958,7 @@ describe('useEnergyMath', () => {
             heating: 'none' as const,
             cooking: 'induction' as const,
             pool: 'none' as const,
+            dryer: 'vented' as const,
           },
         };
 
@@ -972,7 +985,7 @@ describe('useEnergyMath', () => {
           hasGasHeating: false,
           hasGasWater: true,
           hasGasCooking: true,
-          hasOldDryer: false,
+          roomCount: 4,
           gridExportLimit: 5,
           serviceFuse: 63,
           hasPool: false,
@@ -987,6 +1000,7 @@ describe('useEnergyMath', () => {
             heating: 'none' as const,
             cooking: 'gas' as const,
             pool: 'none' as const,
+            dryer: 'vented' as const,
           },
         };
 
@@ -1014,7 +1028,7 @@ describe('useEnergyMath', () => {
           hasGasHeating: true,
           hasGasWater: true,
           hasGasCooking: true,
-          hasOldDryer: false,
+          roomCount: 4,
           gridExportLimit: 5,
           serviceFuse: 63,
           hasPool: false,
@@ -1029,6 +1043,7 @@ describe('useEnergyMath', () => {
             heating: 'gas' as const,
             cooking: 'gas' as const,
             pool: 'none' as const,
+            dryer: 'vented' as const,
           },
         };
 
@@ -1055,7 +1070,7 @@ describe('useEnergyMath', () => {
           hasGasHeating: false,
           hasGasWater: true,
           hasGasCooking: true,
-          hasOldDryer: false,
+          roomCount: 4,
           gridExportLimit: 5,
           serviceFuse: 63,
           hasPool: false,
@@ -1070,6 +1085,7 @@ describe('useEnergyMath', () => {
             heating: 'none' as const,
             cooking: 'gas' as const,
             pool: 'none' as const,
+            dryer: 'vented' as const,
           },
         };
 
@@ -1093,7 +1109,7 @@ describe('useEnergyMath', () => {
           hasGasHeating: false,
           hasGasWater: false,
           hasGasCooking: false,
-          hasOldDryer: false,
+          roomCount: 4,
           gridExportLimit: 5,
           serviceFuse: 63,
           hasPool: false,
@@ -1108,6 +1124,7 @@ describe('useEnergyMath', () => {
             heating: 'none' as const,
             cooking: 'induction' as const,
             pool: 'none' as const,
+            dryer: 'vented' as const,
           },
         };
 
@@ -1137,7 +1154,7 @@ describe('useEnergyMath', () => {
           hasGasHeating: true,
           hasGasWater: true,
           hasGasCooking: false,
-          hasOldDryer: false,
+          roomCount: 4,
           gridExportLimit: 5,
           serviceFuse: 63,
           hasPool: false,
@@ -1152,6 +1169,7 @@ describe('useEnergyMath', () => {
             heating: 'gas' as const,
             cooking: 'induction' as const,
             pool: 'none' as const,
+            dryer: 'vented' as const,
           },
         };
 
@@ -1180,7 +1198,7 @@ describe('useEnergyMath', () => {
           hasGasHeating: true,
           hasGasWater: true,
           hasGasCooking: true,
-          hasOldDryer: false,
+          roomCount: 4,
           gridExportLimit: 5,
           serviceFuse: 63,
           hasPool: true,
@@ -1195,6 +1213,7 @@ describe('useEnergyMath', () => {
             heating: 'gas' as const,
             cooking: 'gas' as const,
             pool: 'single_speed' as const,
+            dryer: 'vented' as const,
           },
         };
 
@@ -1238,7 +1257,7 @@ describe('useEnergyMath', () => {
           hasGasHeating: false,
           hasGasWater: false,
           hasGasCooking: false,
-          hasOldDryer: false,
+          roomCount: 4,
           gridExportLimit: 5,
           serviceFuse: 63,
           hasPool: true,
@@ -1253,6 +1272,7 @@ describe('useEnergyMath', () => {
             heating: 'none' as const,
             cooking: 'induction' as const,
             pool: 'single_speed' as const,
+            dryer: 'vented' as const,
           },
         };
 
@@ -1315,7 +1335,7 @@ describe('useEnergyMath', () => {
           hasGasHeating: false,
           hasGasWater: false,
           hasGasCooking: false,
-          hasOldDryer: false,
+          roomCount: 4,
           gridExportLimit: 5,
           serviceFuse: 63,
           hasPool: true,
@@ -1330,6 +1350,7 @@ describe('useEnergyMath', () => {
             heating: 'none' as const,
             cooking: 'induction' as const,
             pool: 'single_speed' as const,
+            dryer: 'vented' as const,
           },
         };
 
@@ -1354,7 +1375,7 @@ describe('useEnergyMath', () => {
           hasGasHeating: false,
           hasGasWater: false,
           hasGasCooking: false,
-          hasOldDryer: false,
+          roomCount: 4,
           gridExportLimit: 5,
           serviceFuse: 63,
           hasPool: false,
@@ -1369,6 +1390,7 @@ describe('useEnergyMath', () => {
             heating: 'none' as const,
             cooking: 'induction' as const,
             pool: 'none' as const,
+            dryer: 'vented' as const,
           },
         };
 
@@ -1395,7 +1417,7 @@ describe('useEnergyMath', () => {
           hasGasHeating: false,
           hasGasWater: false,
           hasGasCooking: false,
-          hasOldDryer: false,
+          roomCount: 4,
           gridExportLimit: 5,
           serviceFuse: 63,
           hasPool: true,
@@ -1410,6 +1432,7 @@ describe('useEnergyMath', () => {
             heating: 'none' as const,
             cooking: 'induction' as const,
             pool: 'single_speed' as const,
+            dryer: 'vented' as const,
           },
         };
 
@@ -1439,7 +1462,7 @@ describe('useEnergyMath', () => {
           hasGasHeating: false,
           hasGasWater: false,
           hasGasCooking: false,
-          hasOldDryer: false,
+          roomCount: 4,
           gridExportLimit: 5,
           serviceFuse: 63,
           hasPool: false,
@@ -1454,6 +1477,7 @@ describe('useEnergyMath', () => {
             heating: 'none' as const,
             cooking: 'induction' as const,
             pool: 'none' as const,
+            dryer: 'vented' as const,
           },
         };
 
@@ -1480,7 +1504,7 @@ describe('useEnergyMath', () => {
           hasGasHeating: false,
           hasGasWater: false,
           hasGasCooking: false,
-          hasOldDryer: false,
+          roomCount: 4,
           gridExportLimit: 5,
           serviceFuse: 63,
           hasPool: true,
@@ -1495,6 +1519,7 @@ describe('useEnergyMath', () => {
             heating: 'none' as const,
             cooking: 'induction' as const,
             pool: 'single_speed' as const,
+            dryer: 'vented' as const,
           },
         };
 
@@ -1520,7 +1545,7 @@ describe('useEnergyMath', () => {
           hasGasHeating: false,
           hasGasWater: false,
           hasGasCooking: false,
-          hasOldDryer: false,
+          roomCount: 4,
           gridExportLimit: 5,
           serviceFuse: 63,
           hasPool: false,
@@ -1535,6 +1560,7 @@ describe('useEnergyMath', () => {
             heating: 'none' as const,
             cooking: 'induction' as const,
             pool: 'none' as const,
+            dryer: 'vented' as const,
           },
         };
 
@@ -1564,7 +1590,7 @@ describe('useEnergyMath', () => {
           hasGasHeating: false,
           hasGasWater: false,
           hasGasCooking: false,
-          hasOldDryer: false,
+          roomCount: 4,
           gridExportLimit: 5,
           serviceFuse: 63,
           hasPool: true,
@@ -1579,6 +1605,7 @@ describe('useEnergyMath', () => {
             heating: 'none' as const,
             cooking: 'induction' as const,
             pool: 'single_speed' as const,
+            dryer: 'vented' as const,
           },
         };
 
@@ -1624,7 +1651,7 @@ describe('useEnergyMath', () => {
           hasGasHeating: false,
           hasGasWater: false,
           hasGasCooking: false,
-          hasOldDryer: false,
+          roomCount: 4,
           gridExportLimit: 5,
           serviceFuse: 63,
           hasPool: false,
@@ -1639,6 +1666,7 @@ describe('useEnergyMath', () => {
             heating: 'none' as const,
             cooking: 'induction' as const,
             pool: 'none' as const,
+            dryer: 'vented' as const,
           },
         };
 
@@ -1678,7 +1706,7 @@ describe('useEnergyMath', () => {
           hasGasHeating: false,
           hasGasWater: false,
           hasGasCooking: false,
-          hasOldDryer: false,
+          roomCount: 4,
           gridExportLimit: 5,
           serviceFuse: 63,
           hasPool: false,
@@ -1693,6 +1721,7 @@ describe('useEnergyMath', () => {
             heating: 'none' as const,
             cooking: 'induction' as const,
             pool: 'none' as const,
+            dryer: 'vented' as const,
           },
         };
 
@@ -1733,7 +1762,7 @@ describe('useEnergyMath', () => {
           hasGasHeating: false,
           hasGasWater: false,
           hasGasCooking: false,
-          hasOldDryer: false,
+          roomCount: 4,
           gridExportLimit: 5,
           serviceFuse: 63,
           hasPool: false,
@@ -1748,6 +1777,7 @@ describe('useEnergyMath', () => {
             heating: 'none' as const,
             cooking: 'induction' as const,
             pool: 'none' as const,
+            dryer: 'vented' as const,
           },
         };
 
@@ -1788,7 +1818,7 @@ describe('useEnergyMath', () => {
           hasGasHeating: false,
           hasGasWater: false,
           hasGasCooking: false,
-          hasOldDryer: false,
+          roomCount: 4,
           gridExportLimit: 5,
           serviceFuse: 63,
           hasPool: true,
@@ -1803,6 +1833,7 @@ describe('useEnergyMath', () => {
             heating: 'none' as const,
             cooking: 'induction' as const,
             pool: 'single_speed' as const,
+            dryer: 'vented' as const,
           },
         };
 
@@ -1833,7 +1864,7 @@ describe('useEnergyMath', () => {
           hasGasHeating: true,
           hasGasWater: true,
           hasGasCooking: true,
-          hasOldDryer: false,
+          roomCount: 4,
           gridExportLimit: 5,
           serviceFuse: 63,
           hasPool: false,
@@ -1848,6 +1879,7 @@ describe('useEnergyMath', () => {
             heating: 'gas' as const,
             cooking: 'gas' as const,
             pool: 'none' as const,
+            dryer: 'vented' as const,
           },
         };
 
@@ -1884,7 +1916,7 @@ describe('useEnergyMath', () => {
           hasGasHeating: false,
           hasGasWater: true,
           hasGasCooking: true,
-          hasOldDryer: false,
+          roomCount: 4,
           gridExportLimit: 5,
           serviceFuse: 63,
           hasPool: false,
@@ -1899,6 +1931,7 @@ describe('useEnergyMath', () => {
             heating: 'none' as const,
             cooking: 'gas' as const, // Still using gas
             pool: 'none' as const,
+            dryer: 'vented' as const,
           },
         };
 

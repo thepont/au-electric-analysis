@@ -1,4 +1,4 @@
-import { Droplets, Wind, Flame, Waves } from 'lucide-react';
+import { Droplets, Wind, Flame, Waves, Shirt } from 'lucide-react';
 
 interface CurrentHardwareCardProps {
   currentSetup: {
@@ -6,6 +6,7 @@ interface CurrentHardwareCardProps {
     heating: 'gas' | 'resistive' | 'rc' | 'none';
     cooking: 'gas' | 'induction';
     pool: 'none' | 'single_speed' | 'variable_speed';
+    dryer: 'vented' | 'heatpump';
   };
   updateSetup: (updates: Partial<CurrentHardwareCardProps['currentSetup']>) => void;
 }
@@ -19,7 +20,7 @@ export const CurrentHardwareCard = ({ currentSetup, updateSetup }: CurrentHardwa
         </p>
       </div>
 
-      <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-4">
+      <div className="grid md:grid-cols-2 lg:grid-cols-5 gap-4">
         {/* Hot Water */}
         <div className="space-y-2">
           <label className="flex items-center space-x-2 text-sm font-medium text-slate-700">
@@ -85,6 +86,22 @@ export const CurrentHardwareCard = ({ currentSetup, updateSetup }: CurrentHardwa
             <option value="none">No Pool</option>
             <option value="single_speed">Single Speed Pump</option>
             <option value="variable_speed">Variable Speed (already upgraded)</option>
+          </select>
+        </div>
+
+        {/* Dryer */}
+        <div className="space-y-2">
+          <label className="flex items-center space-x-2 text-sm font-medium text-slate-700">
+            <Shirt className="w-4 h-4 text-purple-600" />
+            <span>Dryer</span>
+          </label>
+          <select
+            value={currentSetup.dryer}
+            onChange={(e) => updateSetup({ dryer: e.target.value as 'vented' | 'heatpump' })}
+            className="w-full px-4 py-2 border border-gray-300 rounded-md text-sm focus:ring-2 focus:ring-purple-500 focus:border-transparent bg-white"
+          >
+            <option value="vented">Vented Dryer</option>
+            <option value="heatpump">Heat Pump (already upgraded)</option>
           </select>
         </div>
       </div>

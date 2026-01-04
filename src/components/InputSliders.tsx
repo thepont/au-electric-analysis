@@ -1,4 +1,4 @@
-import { Zap, Battery, Car, Flame, Waves } from 'lucide-react';
+// (No imports needed - removed unused Car, Battery, Flame, Waves icons)
 
 interface InputSlidersProps {
   state: {
@@ -14,11 +14,19 @@ interface InputSlidersProps {
     gridExportLimit: number;
     serviceFuse: number;
     hasPool: boolean;
+    roomCount: number;
     strategies: {
       chargeEvInWindow: boolean;
       chargeBatInWindow: boolean;
       runPoolInWindow: boolean;
       runHotWaterInWindow: boolean;
+    };
+    currentSetup: {
+      hotWater: 'gas' | 'resistive' | 'heatpump';
+      heating: 'gas' | 'resistive' | 'rc' | 'none';
+      cooking: 'gas' | 'induction';
+      pool: 'none' | 'single_speed' | 'variable_speed';
+      dryer: 'vented' | 'heatpump';
     };
   };
   updateState: (newState: Partial<InputSlidersProps['state']>) => void;
@@ -133,67 +141,7 @@ export const InputSliders = ({ state, updateState }: InputSlidersProps) => {
         </div>
       </div>
 
-      {/* System Size Section */}
-      <div className="grid md:grid-cols-2 gap-4 pt-4 border-t border-gray-200">
-        {/* Solar Size */}
-        <div>
-          <label className="block text-sm font-medium text-slate-400 mb-2 uppercase tracking-widest">
-            Solar System Size
-          </label>
-          <div className="flex items-center space-x-2">
-            <input
-              type="number"
-              min="0"
-              max="20"
-              step="0.5"
-              value={state.solarSize}
-              onChange={(e) => updateState({ solarSize: parseFloat(e.target.value) || 0 })}
-              className="w-24 px-3 py-2 border border-gray-300 rounded-md text-sm focus:ring-2 focus:ring-yellow-500 focus:border-transparent"
-            />
-            <span className="text-sm text-gray-600">kW</span>
-          </div>
-          <input
-            type="range"
-            min="0"
-            max="20"
-            step="0.5"
-            value={state.solarSize}
-            onChange={(e) => updateState({ solarSize: parseFloat(e.target.value) })}
-            className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer accent-yellow-500 mt-2"
-          />
-        </div>
 
-        {/* Battery Size */}
-        <div>
-          <label className="block text-sm font-medium text-slate-400 mb-2 uppercase tracking-widest">
-            Battery Capacity
-            {state.isV2H && <span className="ml-2 text-xs text-amber-500">(V2H: 60 kWh)</span>}
-          </label>
-          <div className="flex items-center space-x-2">
-            <input
-              type="number"
-              min="0"
-              max="40"
-              step="0.5"
-              value={state.batterySize}
-              onChange={(e) => updateState({ batterySize: parseFloat(e.target.value) || 0 })}
-              className="w-24 px-3 py-2 border border-gray-300 rounded-md text-sm focus:ring-2 focus:ring-green-500 focus:border-transparent"
-              disabled={state.isV2H}
-            />
-            <span className="text-sm text-gray-600">kWh</span>
-          </div>
-          <input
-            type="range"
-            min="0"
-            max="40"
-            step="0.5"
-            value={state.batterySize}
-            onChange={(e) => updateState({ batterySize: parseFloat(e.target.value) })}
-            className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer accent-green-600 mt-2"
-            disabled={state.isV2H}
-          />
-        </div>
-      </div>
 
       {/* Grid Export Limit Section */}
       <div className="pt-4 border-t border-gray-200">
@@ -233,198 +181,27 @@ export const InputSliders = ({ state, updateState }: InputSlidersProps) => {
         })()}
       </div>
 
-      {/* Strategy Toggles */}
+      {/* Room Count Section */}
       <div className="pt-4 border-t border-gray-200">
-        <h3 className="text-lg font-semibold text-slate-900 tracking-tighter mb-3">Energy Strategy</h3>
-        <div className="grid md:grid-cols-2 lg:grid-cols-5 gap-3">
-          {/* EV Toggle */}
-          <button
-            onClick={() => updateState({ isEV: !state.isEV })}
-            className={`p-4 rounded-lg border-2 transition-all ${
-              state.isEV
-                ? 'border-emerald-500 bg-emerald-50'
-                : 'border-gray-300 bg-white hover:border-gray-400'
-            }`}
-          >
-            <div className="flex items-center space-x-2">
-              <Car className={`w-5 h-5 ${state.isEV ? 'text-emerald-600' : 'text-gray-400'}`} />
-              <span className={`font-medium ${state.isEV ? 'text-emerald-700' : 'text-gray-600'}`}>
-                Electric Vehicle
-              </span>
-            </div>
-          </button>
-
-          {/* V2H Toggle */}
-          <button
-            onClick={() => updateState({ isV2H: !state.isV2H })}
-            disabled={!state.isEV}
-            className={`p-4 rounded-lg border-2 transition-all ${
-              state.isV2H
-                ? 'border-blue-500 bg-blue-50'
-                : state.isEV
-                ? 'border-gray-300 bg-white hover:border-gray-400'
-                : 'border-gray-200 bg-gray-100 cursor-not-allowed opacity-50'
-            }`}
-          >
-            <div className="flex items-center space-x-2">
-              <Battery className={`w-5 h-5 ${state.isV2H ? 'text-blue-600' : 'text-gray-400'}`} />
-              <span className={`font-medium ${state.isV2H ? 'text-blue-700' : 'text-gray-600'}`}>
-                V2H (60 kWh)
-              </span>
-            </div>
-          </button>
-
-          {/* Heat Pump Toggle */}
-          <button
-            onClick={() => updateState({ isHeatPump: !state.isHeatPump })}
-            className={`p-4 rounded-lg border-2 transition-all ${
-              state.isHeatPump
-                ? 'border-amber-500 bg-amber-50'
-                : 'border-gray-300 bg-white hover:border-gray-400'
-            }`}
-          >
-            <div className="flex items-center space-x-2">
-              <Flame className={`w-5 h-5 ${state.isHeatPump ? 'text-amber-600' : 'text-gray-400'}`} />
-              <span className={`font-medium ${state.isHeatPump ? 'text-amber-700' : 'text-gray-600'}`}>
-                Heat Pump
-              </span>
-            </div>
-          </button>
-
-          {/* Induction Toggle */}
-          <button
-            onClick={() => updateState({ isInduction: !state.isInduction })}
-            className={`p-4 rounded-lg border-2 transition-all ${
-              state.isInduction
-                ? 'border-purple-500 bg-purple-50'
-                : 'border-gray-300 bg-white hover:border-gray-400'
-            }`}
-          >
-            <div className="flex items-center space-x-2">
-              <Zap className={`w-5 h-5 ${state.isInduction ? 'text-purple-600' : 'text-gray-400'}`} />
-              <span className={`font-medium ${state.isInduction ? 'text-purple-700' : 'text-gray-600'}`}>
-                Induction Cooking
-              </span>
-            </div>
-          </button>
-
-          {/* Pool Toggle */}
-          <button
-            onClick={() => updateState({ hasPool: !state.hasPool })}
-            className={`p-4 rounded-lg border-2 transition-all ${
-              state.hasPool
-                ? 'border-cyan-500 bg-cyan-50'
-                : 'border-gray-300 bg-white hover:border-gray-400'
-            }`}
-          >
-            <div className="flex items-center space-x-2">
-              <Waves className={`w-5 h-5 ${state.hasPool ? 'text-cyan-600' : 'text-gray-400'}`} />
-              <span className={`font-medium ${state.hasPool ? 'text-cyan-700' : 'text-gray-600'}`}>
-                Pool Pump
-              </span>
-            </div>
-          </button>
-        </div>
-      </div>
-
-      {/* 11:00 AM Stack Section */}
-      <div className="pt-4 border-t border-gray-200">
-        <h3 className="text-lg font-semibold text-slate-900 tracking-tighter mb-1">11:00 AM Stack</h3>
-        <p className="text-sm text-slate-400 mb-3 uppercase tracking-widest">
-          Which devices run during the Free 3 window (11am-2pm)?
+        <label className="block text-sm font-medium text-slate-400 mb-2 uppercase tracking-widest">
+          Rooms to Heat/Cool
+        </label>
+        <p className="text-xs text-slate-500 mb-3">
+          How many rooms do you need to heat/cool? This affects reverse cycle system sizing and cost.
         </p>
-        <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-3">
-          {/* EV Charging Window */}
-          <button
-            onClick={() => updateState({ strategies: { ...state.strategies, chargeEvInWindow: !state.strategies.chargeEvInWindow } })}
-            disabled={!state.isEV}
-            className={`p-4 rounded-lg border-2 transition-all ${
-              state.strategies.chargeEvInWindow
-                ? 'border-emerald-500 bg-emerald-50'
-                : state.isEV
-                ? 'border-gray-300 bg-white hover:border-gray-400'
-                : 'border-gray-200 bg-gray-100 cursor-not-allowed opacity-50'
-            }`}
-          >
-            <div className="flex flex-col space-y-1">
-              <div className="flex items-center space-x-2">
-                <Car className={`w-5 h-5 ${state.strategies.chargeEvInWindow ? 'text-emerald-600' : 'text-gray-400'}`} />
-                <span className={`font-medium ${state.strategies.chargeEvInWindow ? 'text-emerald-700' : 'text-gray-600'}`}>
-                  Charge EV
-                </span>
-              </div>
-              <span className="text-xs text-gray-500">7.0 kW</span>
-            </div>
-          </button>
-
-          {/* Battery Charging Window */}
-          <button
-            onClick={() => updateState({ strategies: { ...state.strategies, chargeBatInWindow: !state.strategies.chargeBatInWindow } })}
-            disabled={state.batterySize === 0 && !state.isV2H}
-            className={`p-4 rounded-lg border-2 transition-all ${
-              state.strategies.chargeBatInWindow
-                ? 'border-blue-500 bg-blue-50'
-                : (state.batterySize > 0 || state.isV2H)
-                ? 'border-gray-300 bg-white hover:border-gray-400'
-                : 'border-gray-200 bg-gray-100 cursor-not-allowed opacity-50'
-            }`}
-          >
-            <div className="flex flex-col space-y-1">
-              <div className="flex items-center space-x-2">
-                <Battery className={`w-5 h-5 ${state.strategies.chargeBatInWindow ? 'text-blue-600' : 'text-gray-400'}`} />
-                <span className={`font-medium ${state.strategies.chargeBatInWindow ? 'text-blue-700' : 'text-gray-600'}`}>
-                  Charge Battery
-                </span>
-              </div>
-              <span className="text-xs text-gray-500">5.0 kW</span>
-            </div>
-          </button>
-
-          {/* Pool Pump Window */}
-          <button
-            onClick={() => updateState({ strategies: { ...state.strategies, runPoolInWindow: !state.strategies.runPoolInWindow } })}
-            disabled={!state.hasPool}
-            className={`p-4 rounded-lg border-2 transition-all ${
-              state.strategies.runPoolInWindow
-                ? 'border-cyan-500 bg-cyan-50'
-                : state.hasPool
-                ? 'border-gray-300 bg-white hover:border-gray-400'
-                : 'border-gray-200 bg-gray-100 cursor-not-allowed opacity-50'
-            }`}
-          >
-            <div className="flex flex-col space-y-1">
-              <div className="flex items-center space-x-2">
-                <Waves className={`w-5 h-5 ${state.strategies.runPoolInWindow ? 'text-cyan-600' : 'text-gray-400'}`} />
-                <span className={`font-medium ${state.strategies.runPoolInWindow ? 'text-cyan-700' : 'text-gray-600'}`}>
-                  Run Pool Pump
-                </span>
-              </div>
-              <span className="text-xs text-gray-500">1.5 kW</span>
-            </div>
-          </button>
-
-          {/* Hot Water Window */}
-          <button
-            onClick={() => updateState({ strategies: { ...state.strategies, runHotWaterInWindow: !state.strategies.runHotWaterInWindow } })}
-            disabled={!state.isHeatPump}
-            className={`p-4 rounded-lg border-2 transition-all ${
-              state.strategies.runHotWaterInWindow
-                ? 'border-amber-500 bg-amber-50'
-                : state.isHeatPump
-                ? 'border-gray-300 bg-white hover:border-gray-400'
-                : 'border-gray-200 bg-gray-100 cursor-not-allowed opacity-50'
-            }`}
-          >
-            <div className="flex flex-col space-y-1">
-              <div className="flex items-center space-x-2">
-                <Flame className={`w-5 h-5 ${state.strategies.runHotWaterInWindow ? 'text-amber-600' : 'text-gray-400'}`} />
-                <span className={`font-medium ${state.strategies.runHotWaterInWindow ? 'text-amber-700' : 'text-gray-600'}`}>
-                  Heat Hot Water
-                </span>
-              </div>
-              <span className="text-xs text-gray-500">1.0 kW</span>
-            </div>
-          </button>
+        <div className="flex items-center space-x-4">
+          <input
+            type="number"
+            min="1"
+            max="10"
+            value={state.roomCount}
+            onChange={(e) => updateState({ roomCount: parseInt(e.target.value) || 4 })}
+            className="w-20 px-3 py-2 border border-gray-300 rounded-md text-sm focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+          />
+          <span className="text-sm text-gray-600">rooms</span>
+          <span className="text-xs text-gray-400">
+            (Typical: 4-5 rooms)
+          </span>
         </div>
       </div>
     </div>

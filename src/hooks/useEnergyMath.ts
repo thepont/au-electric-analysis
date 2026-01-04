@@ -25,7 +25,6 @@ interface EnergyInputs {
   hasGasWater: boolean;
   hasGasCooking: boolean;
   hasPool: boolean;
-  hasOldDryer: boolean;
   gridExportLimit: number;
   serviceFuse: number;
   strategies: {
@@ -39,7 +38,9 @@ interface EnergyInputs {
     heating: 'gas' | 'resistive' | 'rc' | 'none';
     cooking: 'gas' | 'induction';
     pool: 'none' | 'single_speed' | 'variable_speed';
+    dryer: 'vented' | 'heatpump';
   };
+  roomCount: number; // Number of rooms to heat/cool
 }
 
 interface ApplianceAssumption {
@@ -85,6 +86,9 @@ interface EnergyResults {
   heatingSavings: number;
   cookingSavings: number;
   gasDisconnectionBonus: number;
+  // Current setup info for ROI calculations
+  currentHeatingType: 'gas' | 'resistive' | 'rc' | 'none';
+  roomCount: number; // Number of rooms to heat/cool (affects RC cost)
 }
 
 export const useEnergyMath = (inputs: EnergyInputs): EnergyResults => {
@@ -103,7 +107,6 @@ export const useEnergyMath = (inputs: EnergyInputs): EnergyResults => {
       hasGasWater,
       hasGasCooking,
       hasPool,
-      hasOldDryer,
       gridExportLimit,
       serviceFuse,
       strategies,
@@ -147,7 +150,7 @@ export const useEnergyMath = (inputs: EnergyInputs): EnergyResults => {
       });
     }
     
-    if (hasOldDryer) {
+    if (currentSetup.dryer === 'vented') {
       // Vented dryer: ~4kWh per load * 3 loads/week = ~$250/yr
       assumptions.push({ 
         name: "Vented Dryer", 
@@ -492,7 +495,7 @@ export const useEnergyMath = (inputs: EnergyInputs): EnergyResults => {
 
     // Other Upgrade Savings (Keep existing logic)
     // Heat Pump Dryer: Saves ~$200/yr if old dryer exists
-    const hpDryerSavings = hasOldDryer ? 200 : 0;
+    const hpDryerSavings = currentSetup.dryer === 'vented' ? 200 : 0;
     
     // Gap Sealing: Saves 15% of heating bill
     const gapSealingSavings = hasGasHeating ? gasBill * 0.50 * 0.15 : 0;
@@ -561,6 +564,9 @@ export const useEnergyMath = (inputs: EnergyInputs): EnergyResults => {
       heatingSavings,
       cookingSavings,
       gasDisconnectionBonus,
+      // Current setup info for ROI calculations
+      currentHeatingType: currentSetup.heating,
+      roomCount: inputs.roomCount,
     };
   }, [
     inputs.bill,
@@ -576,7 +582,6 @@ export const useEnergyMath = (inputs: EnergyInputs): EnergyResults => {
     inputs.hasGasWater,
     inputs.hasGasCooking,
     inputs.hasPool,
-    inputs.hasOldDryer,
     inputs.gridExportLimit,
     inputs.serviceFuse,
     inputs.strategies.chargeEvInWindow,
@@ -587,5 +592,7 @@ export const useEnergyMath = (inputs: EnergyInputs): EnergyResults => {
     inputs.currentSetup.heating,
     inputs.currentSetup.cooking,
     inputs.currentSetup.pool,
+    inputs.currentSetup.dryer,
+    inputs.roomCount,
   ]);
 };

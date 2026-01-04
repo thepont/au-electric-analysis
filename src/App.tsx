@@ -1,13 +1,13 @@
 import { useHashState } from './hooks/useHashState';
 import { useEnergyMath } from './hooks/useEnergyMath';
 import { InputSliders } from './components/InputSliders';
-import { AssumptionsPanel } from './components/AssumptionsPanel';
 import { ROITable } from './components/ROITable';
 import { CostGraph } from './components/CostGraph';
 import { ReferralLinks } from './components/ReferralLinks';
 import { DisclaimerModal } from './components/DisclaimerModal';
 import { LoadGauge } from './components/LoadGauge';
-import { CurrentHardwareCard } from './components/CurrentHardwareCard';
+import { ApplianceConfiguration } from './components/ApplianceConfiguration';
+import { EnergySimulator } from './components/EnergySimulator';
 import { Zap } from 'lucide-react';
 import { useState } from 'react';
 
@@ -48,16 +48,13 @@ function App() {
             <InputSliders state={state} updateState={updateState} />
           </div>
 
-          {/* Current Hardware Card */}
+          {/* Appliance Configuration - Grouped by appliance */}
           <div className="bg-white rounded-[2.5rem] shadow-sm border border-slate-200 p-8">
             <h2 className="text-2xl font-semibold text-slate-900 tracking-tighter mb-4 flex items-center">
               <span className="w-2 h-8 bg-purple-600 rounded mr-3"></span>
-              Current Hardware
+              Appliance Strategy
             </h2>
-            <CurrentHardwareCard
-              currentSetup={state.currentSetup}
-              updateSetup={(updates) => updateState({ currentSetup: { ...state.currentSetup, ...updates } })}
-            />
+            <ApplianceConfiguration state={state} updateState={updateState} />
           </div>
 
           {/* Load Gauge */}
@@ -71,25 +68,16 @@ function App() {
             />
           )}
 
-          {/* Assumptions Panel */}
+          {/* 24-Hour Energy Simulator */}
           {hasAcceptedDisclaimer && (
-            <div className="bg-white rounded-[2.5rem] shadow-sm border border-slate-200 p-8">
-              <h2 className="text-2xl font-semibold text-slate-900 tracking-tighter mb-4 flex items-center">
-                <span className="w-2 h-8 bg-blue-600 rounded mr-3"></span>
-                Your Current Setup (Estimated)
-              </h2>
-              <AssumptionsPanel 
-                assumptions={results.assumptions}
-                applianceProfile={{
-                  hasGasHeating: state.hasGasHeating,
-                  hasGasWater: state.hasGasWater,
-                  hasGasCooking: state.hasGasCooking,
-                  hasPool: state.hasPool,
-                  hasOldDryer: state.hasOldDryer,
-                }}
-                updateProfile={(updates) => updateState(updates)}
-              />
-            </div>
+            <EnergySimulator 
+              solarSystemKw={state.solarSize}
+              batteryKwh={state.batterySize}
+              strategies={state.strategies}
+              isEV={state.isEV}
+              isHeatPump={state.isHeatPump}
+              hasPool={state.hasPool}
+            />
           )}
 
           {/* ROI Leaderboard */}
