@@ -29,6 +29,7 @@ interface EnergyState {
     heating: 'gas' | 'resistive' | 'rc' | 'none';
     cooking: 'gas' | 'induction';
     pool: 'none' | 'single_speed' | 'variable_speed';
+    dryer: 'vented' | 'heatpump';
   };
 }
 
@@ -60,6 +61,7 @@ const DEFAULT_STATE: EnergyState = {
     heating: 'gas',
     cooking: 'gas',
     pool: 'none',
+    dryer: 'vented',
   },
 };
 
@@ -94,6 +96,7 @@ const parseHash = (hash: string): EnergyState => {
       heating: (params.get('currentHeating') || DEFAULT_STATE.currentSetup.heating) as 'gas' | 'resistive' | 'rc' | 'none',
       cooking: (params.get('currentCooking') || DEFAULT_STATE.currentSetup.cooking) as 'gas' | 'induction',
       pool: (params.get('currentPool') || DEFAULT_STATE.currentSetup.pool) as 'none' | 'single_speed' | 'variable_speed',
+      dryer: (params.get('currentDryer') || DEFAULT_STATE.currentSetup.dryer) as 'vented' | 'heatpump',
     },
   };
 };
@@ -125,6 +128,7 @@ const serializeHash = (state: EnergyState): string => {
   params.set('currentHeating', state.currentSetup.heating);
   params.set('currentCooking', state.currentSetup.cooking);
   params.set('currentPool', state.currentSetup.pool);
+  params.set('currentDryer', state.currentSetup.dryer);
   return `#${params.toString()}`;
 };
 

@@ -7,6 +7,7 @@ const DEFAULT_CURRENT_SETUP = {
   heating: 'gas' as const,
   cooking: 'gas' as const,
   pool: 'none' as const,
+            dryer: 'vented' as const,
 };
 
 describe('useEnergyMath', () => {
@@ -478,6 +479,7 @@ describe('useEnergyMath', () => {
             heating: 'none' as const,
             cooking: 'induction' as const,
             pool: 'none' as const,
+            dryer: 'vented' as const,
           },
         };
 
@@ -525,6 +527,7 @@ describe('useEnergyMath', () => {
             heating: 'none' as const,
             cooking: 'induction' as const,
             pool: 'none' as const,
+            dryer: 'vented' as const,
           },
         };
 
@@ -568,6 +571,7 @@ describe('useEnergyMath', () => {
             heating: 'none' as const,
             cooking: 'induction' as const,
             pool: 'none' as const,
+            dryer: 'vented' as const,
           },
         };
 
@@ -608,6 +612,7 @@ describe('useEnergyMath', () => {
             heating: 'gas' as const,
             cooking: 'induction' as const,
             pool: 'none' as const,
+            dryer: 'vented' as const,
           },
         };
 
@@ -652,6 +657,7 @@ describe('useEnergyMath', () => {
             heating: 'resistive' as const,
             cooking: 'induction' as const,
             pool: 'none' as const,
+            dryer: 'vented' as const,
           },
         };
 
@@ -695,6 +701,7 @@ describe('useEnergyMath', () => {
             heating: 'rc' as const,
             cooking: 'gas' as const,
             pool: 'none' as const,
+            dryer: 'vented' as const,
           },
         };
 
@@ -735,6 +742,7 @@ describe('useEnergyMath', () => {
             heating: 'none' as const,
             cooking: 'gas' as const,
             pool: 'none' as const,
+            dryer: 'vented' as const,
           },
         };
 
@@ -779,6 +787,7 @@ describe('useEnergyMath', () => {
             heating: 'none' as const,
             cooking: 'induction' as const,
             pool: 'none' as const,
+            dryer: 'vented' as const,
           },
         };
 
@@ -819,6 +828,7 @@ describe('useEnergyMath', () => {
             heating: 'none' as const,
             cooking: 'induction' as const,
             pool: 'single_speed' as const,
+            dryer: 'vented' as const,
           },
         };
 
@@ -864,6 +874,7 @@ describe('useEnergyMath', () => {
             heating: 'none' as const,
             cooking: 'induction' as const,
             pool: 'single_speed' as const,
+            dryer: 'vented' as const,
           },
         };
 
@@ -904,6 +915,7 @@ describe('useEnergyMath', () => {
             heating: 'none' as const,
             cooking: 'induction' as const,
             pool: 'variable_speed' as const,
+            dryer: 'vented' as const,
           },
         };
 
@@ -946,6 +958,7 @@ describe('useEnergyMath', () => {
             heating: 'none' as const,
             cooking: 'induction' as const,
             pool: 'none' as const,
+            dryer: 'vented' as const,
           },
         };
 
@@ -987,6 +1000,7 @@ describe('useEnergyMath', () => {
             heating: 'none' as const,
             cooking: 'gas' as const,
             pool: 'none' as const,
+            dryer: 'vented' as const,
           },
         };
 
@@ -1029,6 +1043,7 @@ describe('useEnergyMath', () => {
             heating: 'gas' as const,
             cooking: 'gas' as const,
             pool: 'none' as const,
+            dryer: 'vented' as const,
           },
         };
 
@@ -1070,6 +1085,7 @@ describe('useEnergyMath', () => {
             heating: 'none' as const,
             cooking: 'gas' as const,
             pool: 'none' as const,
+            dryer: 'vented' as const,
           },
         };
 
@@ -1108,6 +1124,7 @@ describe('useEnergyMath', () => {
             heating: 'none' as const,
             cooking: 'induction' as const,
             pool: 'none' as const,
+            dryer: 'vented' as const,
           },
         };
 
@@ -1152,6 +1169,7 @@ describe('useEnergyMath', () => {
             heating: 'gas' as const,
             cooking: 'induction' as const,
             pool: 'none' as const,
+            dryer: 'vented' as const,
           },
         };
 
@@ -1195,6 +1213,7 @@ describe('useEnergyMath', () => {
             heating: 'gas' as const,
             cooking: 'gas' as const,
             pool: 'single_speed' as const,
+            dryer: 'vented' as const,
           },
         };
 
@@ -1253,6 +1272,7 @@ describe('useEnergyMath', () => {
             heating: 'none' as const,
             cooking: 'induction' as const,
             pool: 'single_speed' as const,
+            dryer: 'vented' as const,
           },
         };
 
@@ -1330,6 +1350,7 @@ describe('useEnergyMath', () => {
             heating: 'none' as const,
             cooking: 'induction' as const,
             pool: 'single_speed' as const,
+            dryer: 'vented' as const,
           },
         };
 
@@ -1369,6 +1390,7 @@ describe('useEnergyMath', () => {
             heating: 'none' as const,
             cooking: 'induction' as const,
             pool: 'none' as const,
+            dryer: 'vented' as const,
           },
         };
 
@@ -1410,6 +1432,7 @@ describe('useEnergyMath', () => {
             heating: 'none' as const,
             cooking: 'induction' as const,
             pool: 'single_speed' as const,
+            dryer: 'vented' as const,
           },
         };
 
@@ -1454,6 +1477,7 @@ describe('useEnergyMath', () => {
             heating: 'none' as const,
             cooking: 'induction' as const,
             pool: 'none' as const,
+            dryer: 'vented' as const,
           },
         };
 
@@ -1495,6 +1519,7 @@ describe('useEnergyMath', () => {
             heating: 'none' as const,
             cooking: 'induction' as const,
             pool: 'single_speed' as const,
+            dryer: 'vented' as const,
           },
         };
 
@@ -1535,6 +1560,7 @@ describe('useEnergyMath', () => {
             heating: 'none' as const,
             cooking: 'induction' as const,
             pool: 'none' as const,
+            dryer: 'vented' as const,
           },
         };
 
@@ -1579,6 +1605,7 @@ describe('useEnergyMath', () => {
             heating: 'none' as const,
             cooking: 'induction' as const,
             pool: 'single_speed' as const,
+            dryer: 'vented' as const,
           },
         };
 
@@ -1639,6 +1666,7 @@ describe('useEnergyMath', () => {
             heating: 'none' as const,
             cooking: 'induction' as const,
             pool: 'none' as const,
+            dryer: 'vented' as const,
           },
         };
 
@@ -1693,6 +1721,7 @@ describe('useEnergyMath', () => {
             heating: 'none' as const,
             cooking: 'induction' as const,
             pool: 'none' as const,
+            dryer: 'vented' as const,
           },
         };
 
@@ -1748,6 +1777,7 @@ describe('useEnergyMath', () => {
             heating: 'none' as const,
             cooking: 'induction' as const,
             pool: 'none' as const,
+            dryer: 'vented' as const,
           },
         };
 
@@ -1803,6 +1833,7 @@ describe('useEnergyMath', () => {
             heating: 'none' as const,
             cooking: 'induction' as const,
             pool: 'single_speed' as const,
+            dryer: 'vented' as const,
           },
         };
 
@@ -1848,6 +1879,7 @@ describe('useEnergyMath', () => {
             heating: 'gas' as const,
             cooking: 'gas' as const,
             pool: 'none' as const,
+            dryer: 'vented' as const,
           },
         };
 
@@ -1899,6 +1931,7 @@ describe('useEnergyMath', () => {
             heating: 'none' as const,
             cooking: 'gas' as const, // Still using gas
             pool: 'none' as const,
+            dryer: 'vented' as const,
           },
         };
 
