@@ -44,10 +44,10 @@ export const ApplianceConfiguration = ({ state, updateState }: ApplianceConfigur
         </div>
         
         <div className="grid md:grid-cols-2 gap-4">
-          {/* What do you have now? */}
+          {/* Current or Planned Size */}
           <div>
             <label className="block text-xs font-medium text-slate-600 mb-2 uppercase tracking-wider">
-              What do you have now?
+              Current or Planned Size
             </label>
             <div className="space-y-2">
               <div className="flex items-center space-x-2">
@@ -62,7 +62,7 @@ export const ApplianceConfiguration = ({ state, updateState }: ApplianceConfigur
                 />
                 <span className="text-sm text-gray-600">kW</span>
                 {state.solarSize === 0 && (
-                  <span className="text-xs text-amber-600 ml-2">← Set if planning to install</span>
+                  <span className="text-xs text-amber-600 ml-2">← Set to 0 if no solar</span>
                 )}
               </div>
               <input
@@ -77,13 +77,13 @@ export const ApplianceConfiguration = ({ state, updateState }: ApplianceConfigur
             </div>
           </div>
           
-          {/* Plan to upgrade? */}
+          {/* Upgrade Info */}
           <div>
             <label className="block text-xs font-medium text-slate-600 mb-2 uppercase tracking-wider">
-              Plan to upgrade?
+              Further Upgrades
             </label>
             <div className="text-sm text-gray-600 px-4 py-3 bg-white border border-gray-300 rounded-lg">
-              ROI table shows upgrade options
+              See ROI table below for upgrade options
             </div>
           </div>
         </div>
@@ -97,10 +97,10 @@ export const ApplianceConfiguration = ({ state, updateState }: ApplianceConfigur
         </div>
         
         <div className="grid md:grid-cols-3 gap-4">
-          {/* What do you have now? */}
+          {/* Current or Planned Capacity */}
           <div>
             <label className="block text-xs font-medium text-slate-600 mb-2 uppercase tracking-wider">
-              What do you have now?
+              Current or Planned Capacity
             </label>
             {state.isV2H ? (
               <div>
@@ -123,7 +123,7 @@ export const ApplianceConfiguration = ({ state, updateState }: ApplianceConfigur
                   />
                   <span className="text-sm text-gray-600">kWh</span>
                   {state.batterySize === 0 && (
-                    <span className="text-xs text-amber-600">← Set if planning to install</span>
+                    <span className="text-xs text-amber-600">← Set to 0 if no battery</span>
                   )}
                 </div>
                 <input
@@ -139,13 +139,13 @@ export const ApplianceConfiguration = ({ state, updateState }: ApplianceConfigur
             )}
           </div>
           
-          {/* Plan to upgrade? */}
+          {/* Upgrade Info */}
           <div>
             <label className="block text-xs font-medium text-slate-600 mb-2 uppercase tracking-wider">
-              Plan to upgrade?
+              Further Upgrades
             </label>
             <div className="text-sm text-gray-600 px-4 py-3 bg-white border border-gray-300 rounded-lg">
-              ROI table shows options
+              See ROI table below for upgrade options
             </div>
           </div>
 
