@@ -30,7 +30,7 @@ jobs:
             git config user.email "github-actions[bot]@users.noreply.github.com"
             
             # Commit and push
-            git add .
+            git add preview/
             git commit -m "Remove preview for closed PR #${{ github.event.pull_request.number }}"
             git push
           else
