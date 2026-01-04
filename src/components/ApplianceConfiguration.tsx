@@ -48,27 +48,25 @@ export const ApplianceConfiguration = ({ state, updateState }: ApplianceConfigur
             <label className="block text-xs font-medium text-slate-600 mb-2 uppercase tracking-wider">
               What do you have now?
             </label>
-            <button
-              onClick={() => updateState({ isEV: !state.isEV })}
-              className={`w-full px-4 py-2 rounded-lg border-2 transition-all text-sm font-medium ${
-                state.isEV
-                  ? 'border-emerald-500 bg-emerald-50 text-emerald-700'
-                  : 'border-gray-300 bg-white text-gray-700 hover:border-gray-400'
-              }`}
+            <select
+              value={state.isEV ? 'haveEV' : 'noEV'}
+              onChange={(e) => updateState({ isEV: e.target.value === 'haveEV' })}
+              className="w-full px-3 py-2 rounded-lg border border-gray-300 bg-white text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500"
             >
-              {state.isEV ? '✓ Have Electric Vehicle' : 'No EV Yet'}
-            </button>
+              <option value="noEV">No Electric Vehicle</option>
+              <option value="haveEV">Have Electric Vehicle</option>
+            </select>
           </div>
 
           {/* Do you plan to upgrade? */}
           <div>
             <label className="block text-xs font-medium text-slate-600 mb-2 uppercase tracking-wider">
-              V2H (Vehicle-to-Home)?
+              Plan to upgrade?
             </label>
             <button
               onClick={() => updateState({ isV2H: !state.isV2H })}
               disabled={!state.isEV}
-              className={`w-full px-4 py-2 rounded-lg border-2 transition-all text-sm font-medium ${
+              className={`w-full px-4 py-2 rounded-lg border-2 transition-all text-sm font-medium relative ${
                 state.isV2H
                   ? 'border-blue-500 bg-blue-50 text-blue-700'
                   : state.isEV
@@ -76,10 +74,18 @@ export const ApplianceConfiguration = ({ state, updateState }: ApplianceConfigur
                   : 'border-gray-200 bg-gray-100 text-gray-400 cursor-not-allowed'
               }`}
             >
-              {state.isV2H ? '✓ Yes, V2H (60 kWh)' : 'No V2H'}
+              {state.isV2H && (
+                <span className="absolute -top-1 -right-1 w-5 h-5 bg-blue-500 rounded-full flex items-center justify-center">
+                  <span className="text-white text-xs font-bold">✓</span>
+                </span>
+              )}
+              Add V2H (60 kWh)
             </button>
             {!state.isEV && (
               <p className="text-xs text-gray-500 mt-1">Requires EV first</p>
+            )}
+            {state.isEV && (
+              <p className="text-xs text-gray-500 mt-1">Vehicle-to-Home backup</p>
             )}
           </div>
 
@@ -96,7 +102,7 @@ export const ApplianceConfiguration = ({ state, updateState }: ApplianceConfigur
                 } 
               })}
               disabled={!state.isEV}
-              className={`w-full px-4 py-2 rounded-lg border-2 transition-all text-sm font-medium ${
+              className={`w-full px-4 py-2 rounded-lg border-2 transition-all text-sm font-medium relative ${
                 state.strategies.chargeEvInWindow
                   ? 'border-emerald-500 bg-emerald-50 text-emerald-700'
                   : state.isEV
@@ -104,9 +110,12 @@ export const ApplianceConfiguration = ({ state, updateState }: ApplianceConfigur
                   : 'border-gray-200 bg-gray-100 text-gray-400 cursor-not-allowed'
               }`}
             >
-              {state.strategies.chargeEvInWindow 
-                ? '✓ Yes, Charge Free (7.0 kW)' 
-                : 'No Free Charging'}
+              {state.strategies.chargeEvInWindow && (
+                <span className="absolute -top-1 -right-1 w-5 h-5 bg-emerald-500 rounded-full flex items-center justify-center">
+                  <span className="text-white text-xs font-bold">✓</span>
+                </span>
+              )}
+              Charge Free (7.0 kW)
             </button>
             {!state.isEV && (
               <p className="text-xs text-gray-500 mt-1">Requires EV</p>
@@ -161,17 +170,20 @@ export const ApplianceConfiguration = ({ state, updateState }: ApplianceConfigur
                 } 
               })}
               disabled={state.batterySize === 0 && !state.isV2H}
-              className={`w-full px-4 py-2 rounded-lg border-2 transition-all text-sm font-medium ${
+              className={`w-full px-4 py-2 rounded-lg border-2 transition-all text-sm font-medium relative ${
                 state.strategies.chargeBatInWindow
-                  ? 'border-emerald-500 bg-emerald-50 text-emerald-700'
+                  ? 'border-blue-500 bg-blue-50 text-blue-700'
                   : (state.batterySize > 0 || state.isV2H)
                   ? 'border-gray-300 bg-white text-gray-700 hover:border-gray-400'
                   : 'border-gray-200 bg-gray-100 text-gray-400 cursor-not-allowed'
               }`}
             >
-              {state.strategies.chargeBatInWindow 
-                ? '✓ Yes, Charge Free (5.0 kW)' 
-                : 'No Free Charging'}
+              {state.strategies.chargeBatInWindow && (
+                <span className="absolute -top-1 -right-1 w-5 h-5 bg-blue-500 rounded-full flex items-center justify-center">
+                  <span className="text-white text-xs font-bold">✓</span>
+                </span>
+              )}
+              Charge Free (5.0 kW)
             </button>
             {(state.batterySize === 0 && !state.isV2H) && (
               <p className="text-xs text-gray-500 mt-1">Requires battery</p>
@@ -217,7 +229,7 @@ export const ApplianceConfiguration = ({ state, updateState }: ApplianceConfigur
             <button
               onClick={() => updateState({ isHeatPump: !state.isHeatPump })}
               disabled={state.currentSetup.hotWater === 'heatpump'}
-              className={`w-full px-4 py-2 rounded-lg border-2 transition-all text-sm font-medium ${
+              className={`w-full px-4 py-2 rounded-lg border-2 transition-all text-sm font-medium relative ${
                 state.isHeatPump
                   ? 'border-amber-500 bg-amber-50 text-amber-700'
                   : state.currentSetup.hotWater === 'heatpump'
@@ -225,11 +237,14 @@ export const ApplianceConfiguration = ({ state, updateState }: ApplianceConfigur
                   : 'border-gray-300 bg-white text-gray-700 hover:border-gray-400'
               }`}
             >
+              {state.isHeatPump && (
+                <span className="absolute -top-1 -right-1 w-5 h-5 bg-amber-500 rounded-full flex items-center justify-center">
+                  <span className="text-white text-xs font-bold">✓</span>
+                </span>
+              )}
               {state.currentSetup.hotWater === 'heatpump' 
-                ? '✓ Already Upgraded' 
-                : state.isHeatPump 
-                ? '✓ Yes, Upgrade to Heat Pump' 
-                : 'No Upgrade'}
+                ? 'Already Upgraded' 
+                : 'Upgrade to Heat Pump'}
             </button>
           </div>
 
@@ -246,7 +261,7 @@ export const ApplianceConfiguration = ({ state, updateState }: ApplianceConfigur
                 } 
               })}
               disabled={state.currentSetup.hotWater !== 'heatpump' && !state.isHeatPump}
-              className={`w-full px-4 py-2 rounded-lg border-2 transition-all text-sm font-medium ${
+              className={`w-full px-4 py-2 rounded-lg border-2 transition-all text-sm font-medium relative ${
                 state.strategies.runHotWaterInWindow
                   ? 'border-emerald-500 bg-emerald-50 text-emerald-700'
                   : (state.currentSetup.hotWater === 'heatpump' || state.isHeatPump)
@@ -254,9 +269,12 @@ export const ApplianceConfiguration = ({ state, updateState }: ApplianceConfigur
                   : 'border-gray-200 bg-gray-100 text-gray-400 cursor-not-allowed'
               }`}
             >
-              {state.strategies.runHotWaterInWindow 
-                ? '✓ Yes, Shift Load (1.0 kW)' 
-                : 'No Load Shifting'}
+              {state.strategies.runHotWaterInWindow && (
+                <span className="absolute -top-1 -right-1 w-5 h-5 bg-emerald-500 rounded-full flex items-center justify-center">
+                  <span className="text-white text-xs font-bold">✓</span>
+                </span>
+              )}
+              Heat Free (1.0 kW)
             </button>
             {(state.currentSetup.hotWater !== 'heatpump' && !state.isHeatPump) && (
               <p className="text-xs text-gray-500 mt-1">Requires heat pump</p>
@@ -326,7 +344,7 @@ export const ApplianceConfiguration = ({ state, updateState }: ApplianceConfigur
           <h4 className="font-semibold text-slate-900">Cooking</h4>
         </div>
         
-        <div className="grid md:grid-cols-3 gap-4">
+        <div className="grid md:grid-cols-2 gap-4">
           {/* What do you have now? */}
           <div>
             <label className="block text-xs font-medium text-slate-600 mb-2 uppercase tracking-wider">
@@ -355,7 +373,7 @@ export const ApplianceConfiguration = ({ state, updateState }: ApplianceConfigur
             <button
               onClick={() => updateState({ isInduction: !state.isInduction })}
               disabled={state.currentSetup.cooking === 'induction'}
-              className={`w-full px-4 py-2 rounded-lg border-2 transition-all text-sm font-medium ${
+              className={`w-full px-4 py-2 rounded-lg border-2 transition-all text-sm font-medium relative ${
                 state.isInduction
                   ? 'border-purple-500 bg-purple-50 text-purple-700'
                   : state.currentSetup.cooking === 'induction'
@@ -363,22 +381,15 @@ export const ApplianceConfiguration = ({ state, updateState }: ApplianceConfigur
                   : 'border-gray-300 bg-white text-gray-700 hover:border-gray-400'
               }`}
             >
+              {state.isInduction && (
+                <span className="absolute -top-1 -right-1 w-5 h-5 bg-purple-500 rounded-full flex items-center justify-center">
+                  <span className="text-white text-xs font-bold">✓</span>
+                </span>
+              )}
               {state.currentSetup.cooking === 'induction' 
-                ? '✓ Already Upgraded' 
-                : state.isInduction 
-                ? '✓ Yes, Upgrade to Induction' 
-                : 'No Upgrade'}
+                ? 'Already Upgraded' 
+                : 'Upgrade to Induction'}
             </button>
-          </div>
-
-          {/* Do you plan to shift the load? */}
-          <div>
-            <label className="block text-xs font-medium text-slate-600 mb-2 uppercase tracking-wider">
-              Shift load to 11am-2pm?
-            </label>
-            <div className="text-sm text-gray-600 px-4 py-2 bg-white border border-gray-300 rounded-lg">
-              N/A - On-demand use
-            </div>
           </div>
         </div>
       </div>
@@ -443,17 +454,20 @@ export const ApplianceConfiguration = ({ state, updateState }: ApplianceConfigur
                 } 
               })}
               disabled={!state.hasPool}
-              className={`w-full px-4 py-2 rounded-lg border-2 transition-all text-sm font-medium ${
+              className={`w-full px-4 py-2 rounded-lg border-2 transition-all text-sm font-medium relative ${
                 state.strategies.runPoolInWindow
-                  ? 'border-emerald-500 bg-emerald-50 text-emerald-700'
+                  ? 'border-cyan-500 bg-cyan-50 text-cyan-700'
                   : state.hasPool
                   ? 'border-gray-300 bg-white text-gray-700 hover:border-gray-400'
                   : 'border-gray-200 bg-gray-100 text-gray-400 cursor-not-allowed'
               }`}
             >
-              {state.strategies.runPoolInWindow 
-                ? '✓ Yes, Shift Load (1.5 kW)' 
-                : 'No Load Shifting'}
+              {state.strategies.runPoolInWindow && (
+                <span className="absolute -top-1 -right-1 w-5 h-5 bg-cyan-500 rounded-full flex items-center justify-center">
+                  <span className="text-white text-xs font-bold">✓</span>
+                </span>
+              )}
+              Run Free (1.5 kW)
             </button>
             {!state.hasPool && (
               <p className="text-xs text-gray-500 mt-1">No pool configured</p>
@@ -469,7 +483,7 @@ export const ApplianceConfiguration = ({ state, updateState }: ApplianceConfigur
           <h4 className="font-semibold text-slate-900">Clothes Dryer</h4>
         </div>
         
-        <div className="grid md:grid-cols-3 gap-4">
+        <div className="grid md:grid-cols-2 gap-4">
           {/* What do you have now? */}
           <div>
             <label className="block text-xs font-medium text-slate-600 mb-2 uppercase tracking-wider">
@@ -499,16 +513,6 @@ export const ApplianceConfiguration = ({ state, updateState }: ApplianceConfigur
               {state.currentSetup.dryer === 'heatpump' 
                 ? '✓ Already heat pump' 
                 : 'Calculated in ROI table'}
-            </div>
-          </div>
-
-          {/* Do you plan to shift the load? */}
-          <div>
-            <label className="block text-xs font-medium text-slate-600 mb-2 uppercase tracking-wider">
-              Shift load to 11am-2pm?
-            </label>
-            <div className="text-sm text-gray-600 px-4 py-2 bg-white border border-gray-300 rounded-lg">
-              N/A - Scheduled as needed
             </div>
           </div>
         </div>
